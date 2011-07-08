@@ -6,7 +6,6 @@ import qualified Data.Array.Accelerate as A
 dotp :: Vector Float -> Vector Float -> Acc (Scalar Float)
 dotp as bs = A.fold (+) 0 (A.zipWith (*) (A.use as) (A.use bs))
 
-
 shape6 :: A.DIM1
 shape6 =  A.Z :. 6
 
