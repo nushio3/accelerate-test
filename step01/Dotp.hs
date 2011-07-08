@@ -1,3 +1,4 @@
+#!/usr/bin/env runhaskell
 {-# OPTIONS -Wall #-}
 import Data.Array.Accelerate (Acc, Vector, Scalar, (:.)(..))
 import Data.Array.Accelerate.CUDA (run)
@@ -18,5 +19,4 @@ ans = run $ dotp xs ys
 
 main :: IO ()
 main = do
-  putStrLn "hi"
   print ans
