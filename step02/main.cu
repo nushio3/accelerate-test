@@ -28,11 +28,12 @@ void calculate (const int logN, const int logNB, Real *ma, Real *mb, Real *mc) {
     int j = ((addr&mask2)>>shift2) + ((addr&mask4)>>shift4);
 
     Real sum = 0;
-    int ik=i, jk=j;
+    Real *mai = ma+i;
+    Real *mbj = mb+j;
 #pragma unroll 1024
     for (int k = 0; k < n; ++k) {
-      sum += ma[ik]*mb[jk];
-      ik+=n; jk+=n;
+      sum += (*mai) * (*mbj);
+      mai+=n; mbj+=n;
     }
     mc[i*n+j] = sum;
   }
@@ -51,7 +52,7 @@ void benchmark (const int logN, const int logNB) {
   ma = mh; mb = mh;
 
   cudaThreadSynchronize(); double time_begin = get_time<double>();
-  calculate<<<512, 448*2>>>
+  calculate<<<1024, 448*2>>>
     (logN, logNB,
      thrust::raw_pointer_cast(&*ma.begin()),
      thrust::raw_pointer_cast(&*mb.begin()),
