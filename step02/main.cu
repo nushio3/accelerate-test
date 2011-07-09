@@ -30,7 +30,7 @@ void calculate (const int logN, const int logNB, Real *ma, Real *mb, Real *mc) {
     Real sum = 0;
 #pragma unroll 1024
     for (int k = 0; k < n; ++k) {
-      sum += ma[k*n+i]*ma[k*n+j];
+      sum += ma[k*n+i]*mb[k*n+j];
     }
     mc[i*n+j] = sum;
   }

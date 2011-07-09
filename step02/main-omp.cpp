@@ -11,44 +11,22 @@ typedef double Real;
 string realTypename(float x) { return "float"; }
 string realTypename(double x) { return "double"; }
 
-void calculate (const int logN, const int logNB, Real *ma, Real *mb, Real *mc) {
-  const int n = 1<<logN;
-
-  const int mask1  = (1<<logNB)-1;
-  const int shift2 = logNB;
-  const int mask2  = ((1<<logNB)-1)<<logNB;
-  const int shift3 = logNB;
-  const int mask3  = ((1<<(logN-logNB))-1)<<(2*logNB);
-  const int shift4 = logN;
-  const int mask4  = ((1<<(logN-logNB))-1)<<(logNB+logN);
+void calculate (const int n, Real *ma, Real *mb, Real *mc) {
 
 
-  
 #pragma omp parallel for
-  for (int addr = 0; addr < n*n; ++addr) {
-
-    int i = (addr&mask1) + ((addr&mask3)>>shift3);
-    int j = ((addr&mask2)>>shift2) + ((addr&mask4)>>shift4);
-  
-    //int i = addr%n;
-    //int j = addr/n;
-  
-
-  //for (int i = 0; i < n; ++i) {
-  //for (int j = 0; j < n; ++j) {
-    Real sum = 0;
-    for (int k = 0; k < n; ++k) {
-      sum += ma[k+i*n]*ma[k+j*n];
+  for (int i = 0; i < n; ++i) {
+    for (int j = 0; j < n; ++j) {
+      Real sum = 0;
+      for (int k = 0; k < n; ++k) {
+	sum += ma[i*n+k]*mb[j*n+k];
+      }
+      mc[i*n+j] = sum;
     }
-    mc[i*n+j] = sum;
   }
-// }
 }
-void benchmark (const int logN, const int logNB) {
+void benchmark (const int n) {
   
-  const int n  = 1<<logN;
-  
-    
   vector<Real> ma(n*n), mb(n*n), mc(n*n);
   vector<Real> mh(n*n);
   for (int addr = 0; addr < n*n; ++addr) {
@@ -58,7 +36,7 @@ void benchmark (const int logN, const int logNB) {
 
   double time_begin = get_time<double>();
   calculate
-    (logN, logNB, &ma[0],&mb[0],&mc[0]);
+    (n, &ma[0],&mb[0],&mc[0]);
   double time_end = get_time<double>();
   
   mh = mc;
@@ -74,15 +52,17 @@ void benchmark (const int logN, const int logNB) {
   double flops = flop / time_cost;
   long long int score = correct ? flops : 0;
   cout << score << "\t| "
-       << correct << " " << logN << " " << logNB << " " << realTypename(Real(0)) << " : "
+       << correct << " " << n << " " << realTypename(Real(0)) << " : "
        << flops/1e9 << " Gflops=  " << flop << " / " << time_cost << endl;
 }
 
 int main () {
-  for (int logN = 4; logN <= 12; ++logN) {
-    for (int logNB = 1; logNB < logN; ++logNB) {
-      benchmark(logN, logNB);
-    }
+  for (int n = 512; n <= 4096; n*=2 ) {
+    benchmark(n-8);
+    benchmark(n-4);
+    benchmark(n);
+    benchmark(n+4);
+    benchmark(n+8);
   }
 }
 
