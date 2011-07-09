@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 using namespace std;
@@ -6,6 +7,9 @@ using namespace std;
 #include "get_time.h"
 
 typedef float Real;
+
+string realTypename(float x) { return "float"; }
+string realTypename(double x) { return "double"; }
 
 __global__
 void calculate (const int n, Real *ma, Real *mb, Real *mc) {
@@ -15,9 +19,9 @@ void calculate (const int n, Real *ma, Real *mb, Real *mc) {
     int j = addr/n;
 
     Real sum = 0;
-#pragma unroll 32
+#pragma unroll 1024
     for (int k = 0; k < n; ++k) {
-      sum += ma[i*n+k]*ma[j*n+k]
+      sum += ma[k*n+i]*ma[k*n+j];
     }
     mc[i*n+j] = sum;
   }
@@ -33,7 +37,7 @@ void benchmark (const int n) {
     mh[addr] = Real(1);
   }
   ma = mh; mb = mh;
-  calculate<Iter><<<1024, 448>>>
+  calculate<<<1024, 448*2>>>
     (n,
      thrust::raw_pointer_cast(&*ma.begin()),
      thrust::raw_pointer_cast(&*mb.begin()),
@@ -52,12 +56,17 @@ void benchmark (const int n) {
   double flop = double(n)*n*n*2;
   double time_cost = time_end - time_begin;
   double flops = flop / time_cost;
-  cout << correct << " " << flops/1e9 << " Gflops =  "
-       << flop << " / " << time_cost << endl;
+  long long int score = correct ? flops : 0;
+  cout << score << "\t| "
+       << correct << " " << n << " " << realTypename(Real(0)) << " : "
+       << flops/1e9 << " Gflops=  " << flop << " / " << time_cost << endl;
 }
 
 int main () {
-  for (int n = 1; n <= 1<<12; n*=2)
+  // Set preference for above kernel to L1
+  cudaFuncSetCacheConfig( calculate, cudaFuncCachePreferL1 );
+  
+  for (int n = 4; n <= 1<<12; n*=2)
     benchmark(n);
 }
 
