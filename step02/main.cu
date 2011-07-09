@@ -6,7 +6,7 @@ using namespace std;
 
 #include "get_time.h"
 
-typedef double Real;
+typedef float Real;
 
 string realTypename(float x) { return "float"; }
 string realTypename(double x) { return "double"; }
@@ -28,9 +28,11 @@ void calculate (const int logN, const int logNB, Real *ma, Real *mb, Real *mc) {
     int j = ((addr&mask2)>>shift2) + ((addr&mask4)>>shift4);
 
     Real sum = 0;
+    int ik=i, jk=j;
 #pragma unroll 1024
     for (int k = 0; k < n; ++k) {
-      sum += ma[k*n+i]*mb[k*n+j];
+      sum += ma[ik]*mb[jk];
+      ik+=n; jk+=n;
     }
     mc[i*n+j] = sum;
   }
@@ -49,7 +51,7 @@ void benchmark (const int logN, const int logNB) {
   ma = mh; mb = mh;
 
   cudaThreadSynchronize(); double time_begin = get_time<double>();
-  calculate<<<1024, 448*2>>>
+  calculate<<<512, 448*2>>>
     (logN, logNB,
      thrust::raw_pointer_cast(&*ma.begin()),
      thrust::raw_pointer_cast(&*mb.begin()),
