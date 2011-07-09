@@ -12,11 +12,20 @@ string realTypename(float x) { return "float"; }
 string realTypename(double x) { return "double"; }
 
 __global__
-void calculate (const int n, Real *ma, Real *mb, Real *mc) {
+void calculate (const int logN, const int logNB, Real *ma, Real *mb, Real *mc) {
+  const int n = 1<<logN;
+  const int mask1  = (1<<logNB)-1;
+  const int shift2 = logNB;
+  const int mask2  = ((1<<logNB)-1)<<logNB;
+  const int shift3 = logNB;
+  const int mask3  = ((1<<(logN-logNB))-1)<<(2*logNB);
+  const int shift4 = logN;
+  const int mask4  = ((1<<(logN-logNB))-1)<<(logNB+logN);
+  
   for (int addr = blockIdx.x * blockDim.x + threadIdx.x; addr < n*n;  
        addr += blockDim.x * gridDim.x) {
-    int i = addr%n;
-    int j = addr/n;
+    int i = (addr&mask1) + ((addr&mask3)>>shift3);
+    int j = ((addr&mask2)>>shift2) + ((addr&mask4)>>shift4);
 
     Real sum = 0;
 #pragma unroll 1024
@@ -27,9 +36,12 @@ void calculate (const int n, Real *ma, Real *mb, Real *mc) {
   }
 }
 
-void benchmark (const int n) {
+void benchmark (const int logN, const int logNB) {
 
-  double time_begin = get_time<double>();
+
+  const int n  = 1<<logN;
+  
+
   
   thrust::device_vector<Real> ma(n*n), mb(n*n), mc(n*n);
   thrust::host_vector<Real> mh(n*n);
@@ -37,12 +49,16 @@ void benchmark (const int n) {
     mh[addr] = Real(1);
   }
   ma = mh; mb = mh;
+
+  cudaThreadSynchronize();double time_begin = get_time<double>();
   calculate<<<1024, 448*2>>>
-    (n,
+    (logN, logNB,
      thrust::raw_pointer_cast(&*ma.begin()),
      thrust::raw_pointer_cast(&*mb.begin()),
      thrust::raw_pointer_cast(&*mc.begin())
      );
+  cudaThreadSynchronize();double time_end = get_time<double>();
+  
   mh = mc;
   bool correct = true;
   for (int addr = 0; addr < n*n; ++addr) {
@@ -51,14 +67,13 @@ void benchmark (const int n) {
     }
   }
 
-  double time_end = get_time<double>();
   
   double flop = double(n)*n*n*2;
   double time_cost = time_end - time_begin;
   double flops = flop / time_cost;
   long long int score = correct ? flops : 0;
   cout << score << "\t| "
-       << correct << " " << n << " " << realTypename(Real(0)) << " : "
+       << correct << " " << logN << " " << logNB << " " << realTypename(Real(0)) << " : "
        << flops/1e9 << " Gflops=  " << flop << " / " << time_cost << endl;
 }
 
@@ -66,7 +81,38 @@ int main () {
   // Set preference for above kernel to L1
   cudaFuncSetCacheConfig( calculate, cudaFuncCachePreferL1 );
   
-  for (int n = 4; n <= 1<<12; n*=2)
-    benchmark(n);
+  for (int logN = 4; logN <= 12; ++logN) {
+    for (int logNB = 1; logNB < logN; ++logNB) {
+      benchmark(logN, logNB);
+    }
+  }
 }
 
+
+/*
+int main () {
+  for (int logN = 4; logN <= 13; ++logN) {
+    for (int logNB = 1; logNB < logN; ++logNB) {
+      const int n = 1<<logN;
+      const int mask1  = (1<<logNB)-1;
+      const int shift2 = logNB;
+      const int mask2  = ((1<<logNB)-1)<<logNB;
+      const int shift3 = logNB;
+      const int mask3  = ((1<<(logN-logNB))-1)<<(2*logNB);
+      const int shift4 = logN;
+      const int mask4  = ((1<<(logN-logNB))-1)<<(logNB+logN);
+
+      cerr << mask1 << " " << mask2 << " " << mask3 << " " << mask4 << endl;
+      
+      for (int addr = 0; addr < n*n; ++addr) {
+	int i = (addr&mask1) + ((addr&mask3)>>shift3);
+	int j = ((addr&mask2)>>shift2) + ((addr&mask4)>>shift4);
+
+	cout << i << " " << j << endl;
+      }
+      return 0;
+    }
+  }
+}
+
+*/
