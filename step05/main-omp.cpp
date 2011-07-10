@@ -185,6 +185,9 @@ struct Fluid {
               + a02[addr]+a12[addr]+a22[addr];
           }
         }
+        dens /= zoom*zoom;
+        momx /= zoom*zoom;
+        momy /= zoom*zoom;
 	const Real velx = momx / (dens + eps);
 	const Real vely = momy / (dens + eps);
 	Real 
