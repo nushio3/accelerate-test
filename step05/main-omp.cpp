@@ -58,9 +58,9 @@ struct Fluid {
     for (int y = 0; y < height; ++y) {
       for (int x = 0; x < width; ++x) {
 	const int p = y  * width + x;
-	const int r = height/8;
-	const int oy = height/2;
-	const int ox = oy;
+	const Real r = height/8;
+	const Real oy = height/2;
+	const Real ox = oy;
 	solid[p] = 64*sq(x-ox) + sq(y-oy) < sq(r) ? 1 : 0;
 	Real w = 0.5*(Real(1) - solid[p]);
 	a00[p] = a02[p] = a10[p] = a12[p] = a20[p] = a22[p] = 0;
