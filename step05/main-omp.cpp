@@ -97,7 +97,7 @@ struct Fluid {
         Real b22 = a22[p11];
         
 	// boundary conditions
-	if (x==0 || x == width-1) {
+	if (x==0 || x == width-1 ) {
           const Real w= 0.5;
 	  b00 = b02 = b10 = b12 = b20 = b22 = 0;
           b01 = w*0.1;
@@ -119,15 +119,16 @@ struct Fluid {
         b12 = mix(Real(1)/Real( 9), n, 0, 1,vx,vy);
         b22 = mix(Real(1)/Real(36), n, 1, 1,vx,vy);
 
-	bounce(solid[p00], b00, b11);
-	bounce(solid[p01], b01, b11);
-	bounce(solid[p02], b02, b11);
-	bounce(solid[p10], b10, b11);
-	bounce(solid[p12], b12, b11);
-	bounce(solid[p20], b20, b11);
-	bounce(solid[p21], b21, b11);
-	bounce(solid[p22], b22, b11);
-
+        if (solid[p11]<=0.5) {
+          bounce(solid[p00], b00, b11);
+          bounce(solid[p01], b01, b11);
+          bounce(solid[p02], b02, b11);
+          bounce(solid[p10], b10, b11);
+          bounce(solid[p12], b12, b11);
+          bounce(solid[p20], b20, b11);
+          bounce(solid[p21], b21, b11);
+          bounce(solid[p22], b22, b11);
+        }
 	next.a00[p11] = b00;
 	next.a10[p11] = b10;
 	next.a20[p11] = b20;
@@ -157,15 +158,15 @@ struct Fluid {
 	const int p02 = y2 * width + x;
 	const int p12 = y2 * width + x1;
 	const int p22 = y2 * width + x2;
-	next.a00[p00] = a00[p11];
-	next.a10[p10] = a10[p11];
-	next.a20[p20] = a20[p11];
-	next.a01[p01] = a01[p11];
+	next.a00[p11] = a00[p22];
+	next.a10[p11] = a10[p12];
+	next.a20[p11] = a20[p02];
+	next.a01[p11] = a01[p21];
 	next.a11[p11] = a11[p11];
-	next.a21[p21] = a21[p11];
-	next.a02[p02] = a02[p11];
-	next.a12[p12] = a12[p11];
-	next.a22[p22] = a22[p11];
+	next.a21[p11] = a21[p01];
+	next.a02[p11] = a02[p20];
+	next.a12[p11] = a12[p10];
+	next.a22[p11] = a22[p00];
       }
     }    
   }
