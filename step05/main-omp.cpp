@@ -64,7 +64,7 @@ struct Fluid {
 	solid[p] = 64*sq(x-ox) + sq(y-oy) < sq(r) ? 1 : 0;
 	Real w = 0.5*(Real(1) - solid[p]);
 	a00[p] = a02[p] = a10[p] = a12[p] = a20[p] = a22[p] = 0;
-        a01[p] = w*0.18;
+        a01[p] = w*0.1;
 	a11[p] = w*0.7;
 	a21[p] = w*0.2;
       }
@@ -103,13 +103,9 @@ struct Fluid {
           const Real w= 0.5;
           if (x==0 || x == width-1) {
             b00 = b02 = b10 = b12 = b20 = b22 = 0;
-            b01 = w*0.18;
+            b01 = w*0.1;
             b11 = w*Real(0.7); b21 = w*Real(0.2) + 1e-2 * sin(12*y/height);
           } 
-          if (solid[p11]>0.5) {
-            b00 = b01 = b02 = b10 = b12 = b20 = b21 = b22 = 0;
-            b11 = 0.5*w;
-          }
         }
 
         Real n = b00+b01+b02+b10+b11+b12+b20+b21+b22+eps;
@@ -127,6 +123,13 @@ struct Fluid {
         b02 = mix(Real(1)/Real(36), n,-1, 1,vx,vy);
         b12 = mix(Real(1)/Real( 9), n, 0, 1,vx,vy);
         b22 = mix(Real(1)/Real(36), n, 1, 1,vx,vy);
+
+	// solid boundary conditions
+        if (solid[p11]>0.5) {
+          b00 = b01 = b02 = b10 = b12 = b20 = b21 = b22 = 0;
+          b11 = 0.1;
+        }
+
 
 	next.a00[p11] = b00;
 	next.a10[p11] = b10;
