@@ -8,12 +8,12 @@
 #include <complex>
 
 #include "color.h"
-#include "../math/vector.h"
+#include "vector.h"
 
 namespace noost{
 namespace visualization{
 namespace ppm{
-
+  
 typedef int image_coordinate_t;
 
   /**
