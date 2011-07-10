@@ -200,9 +200,9 @@ struct Fluid {
 	const Real velx = momx / (dens + eps);
 	const Real vely = momy / (dens + eps);
 	Real 
-	  r = (10*vely+0.5),
+	  r = (30*vely+0.5),
 	  g = dens,
-	  b = (10*velx+0.5);
+	  b = (30*velx+0.5);
 	bmp(x,y) = rgb<Real>(r,g,b);
       }
     }
