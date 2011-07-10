@@ -11,7 +11,7 @@ using namespace noost::visualization::ppm;
 
 typedef float Real;
 const Real eps = 1e-20;
-const int zoom = 1;
+int zoom;
 
 template<class T> T sq(const T &x) { return x*x; }
 
@@ -71,6 +71,7 @@ struct Fluid {
   }
   
   void collision (const int t, Fluid& next) {
+#pragma omp parallel for
     for (int y = 0; y < height; ++y) {
       for (int x = 0; x < width; ++x) {
 	const int x1 = (x+1)%width;
@@ -101,7 +102,7 @@ struct Fluid {
           const Real w= 0.5;
 	  b00 = b02 = b10 = b12 = b20 = b22 = 0;
           b01 = w*0.1;
-	  b11 = w*Real(0.7); b21 = w*Real(0.2) + 1e-4 * cos(y);
+	  b11 = w*Real(0.7); b21 = w*Real(0.2) + 1e-2 * sin(12*y/height);
 	} 
 
         Real n = b00+b01+b02+b10+b11+b12+b20+b21+b22+eps;
@@ -134,6 +135,7 @@ struct Fluid {
   }
 
   void proceed (Fluid &next) {
+#pragma omp parallel for
     for (int y = 0; y < height; ++y) {
       for (int x = 0; x < width; ++x) {
 	const int x1 = (x+1)%width;
@@ -202,14 +204,22 @@ struct Fluid {
   }
 };
 
-int main () {
+int main (int argc, char **argv) {
+  if (argc <= 1) {
+    zoom = 1;
+  } else {
+    istringstream iss(argv[1]);
+    iss >> zoom;
+  }
+
   Fluid flu(512*zoom,256*zoom);
   Fluid flu2=flu;
   
-  for (int t = 0; t < 10001; ++t) {
-    if (t % 100 == 0) {
+  for (int t = 0; t < zoom*10001; ++t) {
+    if (t % (zoom*100) == 0) {
       ostringstream ossFn;
       ossFn << "img/" << (100000000+t) << ".ppm";
+      cerr << ossFn.str() << endl;
       flu.write(ossFn.str());
     }
       
