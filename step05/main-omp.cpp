@@ -185,11 +185,11 @@ struct Fluid {
               + a10[addr]+a11[addr]+a12[addr]
               + a20[addr]+a21[addr]+a22[addr];
             momx 
-              -=a00[addr]+a01[addr]+a02[addr]
-              + a20[addr]+a21[addr]+a22[addr];
+              +=-a00[addr]-a01[addr]-a02[addr]
+              +  a20[addr]+a21[addr]+a22[addr];
             momy 
-              -=a00[addr]+a10[addr]+a20[addr]
-              + a02[addr]+a12[addr]+a22[addr];
+              +=-a00[addr]-a10[addr]-a20[addr]
+              +  a02[addr]+a12[addr]+a22[addr];
           }
         }
         dens /= zoom*zoom;
