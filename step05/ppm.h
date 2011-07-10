@@ -49,22 +49,22 @@ public:
   color::rgb<quantum> bgcolor; 
 
   ///画像の横幅
-  const image_coordinate_t width() const{return w;}
+  image_coordinate_t width() const{return w;}
 
   ///画像の縦幅
-  const image_coordinate_t height() const{return h;}
+  image_coordinate_t height() const{return h;}
   
-  const bool in(const image_coordinate_t &x, const image_coordinate_t &y) const{ 
+  bool in(const image_coordinate_t &x, const image_coordinate_t &y) const{ 
     ///指定された点が画像の内側に入っているか
     return x>=0 && y>=0 && x<w && y<h;
   }
   template<class r>
-  const bool in(const noost::math::vector::component_by_name::vector2<r> &p) const{
+  bool in(const noost::math::vector::component_by_name::vector2<r> &p) const{
     ///指定された点が画像の内側に入っているか
     return in((image_coordinate_t)p.x, (image_coordinate_t)p.y);
   }
   template<class r>
-  const bool in(const std::complex<r> &p) const{
+  bool in(const std::complex<r> &p) const{
     ///指定された点が画像の内側に入っているか
     return in((image_coordinate_t)p.real(), (image_coordinate_t)p.imag());
   }
