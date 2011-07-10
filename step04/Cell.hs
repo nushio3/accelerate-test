@@ -1,6 +1,8 @@
 #!/usr/bin/env runhaskell
 {-# LANGUAGE TypeOperators #-}
 {-# OPTIONS -Wall #-}
+module Cell(xfun) where
+
 import Data.Array.Accelerate (Acc, Scalar, (:.)(..), Z(..), Exp)
 import Data.Array.Accelerate.CUDA (run)
 import qualified Data.Array.Accelerate.Smart as Smart
@@ -61,9 +63,13 @@ benchmark task = do
   let 
     dt :: Double
     dt = fromRational $ toRational $ diffUTCTime t2 t1
-  putStrLn $ unwords $ [ show (flop/dt), show flop, show dt, msg]
+  putStrLn $ unwords $ [ show (flop/dt/1e9), "Gflops",  show flop, show dt, msg]
   
 
 main :: IO ()
 main = do
-  mapM_ (benchmark . solve) [(2^i, 4^j)|i<-[10..(14::Int)], j<-[1..(10::Int)]]
+  mapM_ (benchmark . solve) [(2^i, 4^j)|i<-[10..(13::Int)], j<-[1..(6::Int)]]
+
+
+xfun :: Exp Real -> Exp Real
+xfun = (\x -> 4 * x * (1-x)) 
