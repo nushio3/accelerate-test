@@ -65,7 +65,7 @@ struct Fluid {
     }
   }
   
-  void collision (Fluid& next) {
+  void collision (const int t, Fluid& next) {
     for (int y = 0; y < height; ++y) {
       for (int x = 0; x < width; ++x) {
 	const int x1 = (x+1)%width;
@@ -99,10 +99,17 @@ struct Fluid {
 
 	b11 += collide(b00,b22);
 	b11 += collide(b02,b20);
-	b01 += collide(b00,b02);  
-	b21 += collide(b20,b22);  
-	b10 += collide(b00,b20);  
-	b12 += collide(b02,b22);
+        if (t%2==0) {
+          b01 += collide(b00,b02);  
+          b21 += collide(b20,b22);  
+          b10 += collide(b00,b20);  
+          b12 += collide(b02,b22);
+        } else {
+          b10 += collide(b00,b20);  
+          b12 += collide(b02,b22);
+          b01 += collide(b00,b02);  
+          b21 += collide(b20,b22);  
+        }
 	b11 += collide(b10,b12);
 	b11 += collide(b01,b21);
 	thermalize(b11, b10, b12, b01, b21);
@@ -213,7 +220,7 @@ int main () {
       flu.write(ossFn.str());
     }
       
-    flu.collision(flu2);
+    flu.collision(t,flu2);
     flu2.proceed(flu);
   }
   
