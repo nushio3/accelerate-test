@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -62,12 +63,14 @@ struct Fluid {
 	const int r = height/8;
 	const int oy = height/2;
 	const int ox = oy;
-	solid[p] = 64*sq(x-ox) + sq(y-oy) < sq(r) ? 1 : 0;
-	const Real w = Real(1) - solid[p];
-	a00[p] = a02[p] = a10[p] = a12[p] = a20[p] = a22[p] = Real(0);
-        a01[p] = 0.1;
-	a11[p] = w*Real(0.7); 
-	a21[p] = w*(Real(0.2) + 1e-4 * (sin(x) + cos(y)));
+	solid[p] = 0; // 64*sq(x-ox) + sq(y-oy) < sq(r) ? 1 : 0;
+	Real w = 0.5*(Real(1) - solid[p]);
+        if (y > height/2+r*sin(Real(12*x)/width)) {w/=2;}
+	a00[p] = a02[p] = a10[p] = a12[p] = a20[p] = a22[p] = w*Real(0.05);
+        a01[p] = w*0.1;
+	a11[p] = w*0.7;
+	a21[p] = w*Real(0.2);
+        if (y > height/2+r*sin(Real(12*x)/width)) {swap(a01[p], a21[p]);}
       }
     }
   }
@@ -99,8 +102,8 @@ struct Fluid {
         Real b22 = a22[p11];
         
 	// boundary conditions
-	if (x==0) {
-	  b00 = b02 = b10 = b12 = b20 = b22 = Real(0);
+	if (x==0 && false) {
+	  b00 = b02 = b10 = b12 = b20 = b22 = Real(0.01);
           b01 = 0.1;
 	  b11 = Real(0.7); b21 = Real(0.2) + 1e-4 * cos(y);
 	}
@@ -215,6 +218,8 @@ struct Fluid {
         limit(limitter, b02, c02);
         limit(limitter, b12, c12);
         limit(limitter, b22, c22);
+
+        
 
 	bounce(solid[p00], c00, c22);
 	bounce(solid[p01], c01, c21);
