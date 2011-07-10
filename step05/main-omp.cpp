@@ -10,7 +10,7 @@ using namespace noost::visualization::ppm;
 
 typedef float Real;
 const Real eps = 1e-20;
-const int zoom = 8;
+const int zoom = 2;
 
 template<class T> T sq(const T &x) { return x*x; }
 
@@ -48,6 +48,12 @@ struct Fluid {
     dest += amt;
     src -= amt;
   }
+  void setLimit (Real &limitter, const Real src, const Real dest) {
+    if(dest<src)limitter = min(limitter, src/(src-dest));
+  }
+  void limit(const Real limitter, const Real src, Real &dest) {
+    dest = src + limitter*(dest-src);
+  }
 
   void initialize () {
     for (int y = 0; y < height; ++y) {
@@ -58,8 +64,9 @@ struct Fluid {
 	const int ox = oy;
 	solid[p] = 64*sq(x-ox) + sq(y-oy) < sq(r) ? 1 : 0;
 	const Real w = Real(1) - solid[p];
-	a00[p] = a01[p] = a02[p] = a10[p] = a12[p] = a20[p] = a22[p] = Real(0);
-	a11[p] = w*Real(0.8); 
+	a00[p] = a02[p] = a10[p] = a12[p] = a20[p] = a22[p] = Real(0);
+        a01[p] = 0.1;
+	a11[p] = w*Real(0.7); 
 	a21[p] = w*(Real(0.2) + 1e-4 * (sin(x) + cos(y)));
       }
     }
@@ -81,61 +88,152 @@ struct Fluid {
 	const int p02 = y2 * width + x;
 	const int p12 = y2 * width + x1;
 	const int p22 = y2 * width + x2;
-	Real b00 = a00[p11];
-	Real b10 = a10[p11];
-	Real b20 = a20[p11];
-	Real b01 = a01[p11];
-	Real b11 = a11[p11];
-	Real b21 = a21[p11];
-	Real b02 = a02[p11];
-	Real b12 = a12[p11];
-	Real b22 = a22[p11];
-
+        Real b00 = a00[p11];
+        Real b10 = a10[p11];
+        Real b20 = a20[p11];
+        Real b01 = a01[p11];
+        Real b11 = a11[p11];
+        Real b21 = a21[p11];
+        Real b02 = a02[p11];
+        Real b12 = a12[p11];
+        Real b22 = a22[p11];
+        
 	// boundary conditions
 	if (x==0) {
-	  b00 = b01 = b02 = b10 = b12 = b20 = b22 = Real(0);
-	  b11 = Real(0.8); b21 = Real(0.2) + 1e-4 * cos(y);
+	  b00 = b02 = b10 = b12 = b20 = b22 = Real(0);
+          b01 = 0.1;
+	  b11 = Real(0.7); b21 = Real(0.2) + 1e-4 * cos(y);
 	}
+        Real c00 = 0;
+        Real c10 = 0;
+        Real c20 = 0;
+        Real c01 = 0;
+        Real c11 = 0;
+        Real c21 = 0;
+        Real c02 = 0;
+        Real c12 = 0;
+        Real c22 = 0;
+        c00 += Real(0.5555555555555556) * b00;
+        c00 += Real(0.22222222222222224) * b10;
+        c00 += Real(0.2222222222222222) * b20;
+        c00 += Real(0.22222222222222224) * b01;
+        c00 += Real(-0.1111111111111111) * b11;
+        c00 += Real(-0.11111111111111116) * b21;
+        c00 += Real(0.22222222222222218) * b02;
+        c00 += Real(-0.11111111111111116) * b12;
+        c00 += Real(-0.11111111111111122) * b22;
+        c10 += Real(0.22222222222222224) * b00;
+        c10 += Real(0.3055555555555556) * b10;
+        c10 += Real(0.22222222222222224) * b20;
+        c10 += Real(0.1388888888888889) * b01;
+        c10 += Real(0.2222222222222222) * b11;
+        c10 += Real(0.1388888888888889) * b21;
+        c10 += Real(-0.11111111111111116) * b02;
+        c10 += Real(-2.7777777777777832e-2) * b12;
+        c10 += Real(-0.11111111111111116) * b22;
+        c20 += Real(0.2222222222222222) * b00;
+        c20 += Real(0.22222222222222224) * b10;
+        c20 += Real(0.5555555555555556) * b20;
+        c20 += Real(-0.11111111111111116) * b01;
+        c20 += Real(-0.1111111111111111) * b11;
+        c20 += Real(0.22222222222222224) * b21;
+        c20 += Real(-0.11111111111111122) * b02;
+        c20 += Real(-0.11111111111111116) * b12;
+        c20 += Real(0.22222222222222218) * b22;
+        c01 += Real(0.22222222222222224) * b00;
+        c01 += Real(0.1388888888888889) * b10;
+        c01 += Real(-0.11111111111111116) * b20;
+        c01 += Real(0.3055555555555556) * b01;
+        c01 += Real(0.2222222222222222) * b11;
+        c01 += Real(-2.7777777777777832e-2) * b21;
+        c01 += Real(0.22222222222222224) * b02;
+        c01 += Real(0.1388888888888889) * b12;
+        c01 += Real(-0.11111111111111116) * b22;
+        c11 += Real(-0.1111111111111111) * b00;
+        c11 += Real(0.2222222222222222) * b10;
+        c11 += Real(-0.1111111111111111) * b20;
+        c11 += Real(0.2222222222222222) * b01;
+        c11 += Real(0.5555555555555556) * b11;
+        c11 += Real(0.2222222222222222) * b21;
+        c11 += Real(-0.1111111111111111) * b02;
+        c11 += Real(0.2222222222222222) * b12;
+        c11 += Real(-0.1111111111111111) * b22;
+        c21 += Real(-0.11111111111111116) * b00;
+        c21 += Real(0.1388888888888889) * b10;
+        c21 += Real(0.22222222222222224) * b20;
+        c21 += Real(-2.7777777777777832e-2) * b01;
+        c21 += Real(0.2222222222222222) * b11;
+        c21 += Real(0.3055555555555556) * b21;
+        c21 += Real(-0.11111111111111116) * b02;
+        c21 += Real(0.1388888888888889) * b12;
+        c21 += Real(0.22222222222222224) * b22;
+        c02 += Real(0.22222222222222218) * b00;
+        c02 += Real(-0.11111111111111116) * b10;
+        c02 += Real(-0.11111111111111122) * b20;
+        c02 += Real(0.22222222222222224) * b01;
+        c02 += Real(-0.1111111111111111) * b11;
+        c02 += Real(-0.11111111111111116) * b21;
+        c02 += Real(0.5555555555555556) * b02;
+        c02 += Real(0.22222222222222224) * b12;
+        c02 += Real(0.2222222222222222) * b22;
+        c12 += Real(-0.11111111111111116) * b00;
+        c12 += Real(-2.7777777777777832e-2) * b10;
+        c12 += Real(-0.11111111111111116) * b20;
+        c12 += Real(0.1388888888888889) * b01;
+        c12 += Real(0.2222222222222222) * b11;
+        c12 += Real(0.1388888888888889) * b21;
+        c12 += Real(0.22222222222222224) * b02;
+        c12 += Real(0.3055555555555556) * b12;
+        c12 += Real(0.22222222222222224) * b22;
+        c22 += Real(-0.11111111111111122) * b00;
+        c22 += Real(-0.11111111111111116) * b10;
+        c22 += Real(0.22222222222222218) * b20;
+        c22 += Real(-0.11111111111111116) * b01;
+        c22 += Real(-0.1111111111111111) * b11;
+        c22 += Real(0.22222222222222224) * b21;
+        c22 += Real(0.2222222222222222) * b02;
+        c22 += Real(0.22222222222222224) * b12;
+        c22 += Real(0.5555555555555556) * b22;
 
-	b11 += collide(b00,b22);
-	b11 += collide(b02,b20);
-        if (t%2==0) {
-          b01 += collide(b00,b02);  
-          b21 += collide(b20,b22);  
-          b10 += collide(b00,b20);  
-          b12 += collide(b02,b22);
-        } else {
-          b10 += collide(b00,b20);  
-          b12 += collide(b02,b22);
-          b01 += collide(b00,b02);  
-          b21 += collide(b20,b22);  
-        }
-	b11 += collide(b10,b12);
-	b11 += collide(b01,b21);
-	thermalize(b11, b10, b12, b01, b21);
-	thermalize(b10, b00, b20);
-	thermalize(b12, b02, b22);
-	thermalize(b01, b00, b02);
-	thermalize(b21, b20, b22);
-	bounce(solid[p00], b00, b11);
-	bounce(solid[p01], b01, b11);
-	bounce(solid[p02], b02, b11);
-	bounce(solid[p10], b10, b11);
-	bounce(solid[p12], b12, b11);
-	bounce(solid[p20], b20, b11);
-	bounce(solid[p21], b21, b11);
-	bounce(solid[p22], b22, b11);
+        Real limitter = 1;
+        setLimit(limitter, b00, c00);
+        setLimit(limitter, b10, c10);
+        setLimit(limitter, b20, c20);
+        setLimit(limitter, b01, c01);
+        setLimit(limitter, b11, c11);
+        setLimit(limitter, b21, c21);
+        setLimit(limitter, b02, c02);
+        setLimit(limitter, b12, c12);
+        setLimit(limitter, b22, c22);
 
-	next.a00[p11] = b00;
-	next.a10[p11] = b10;
-	next.a20[p11] = b20;
-	next.a01[p11] = b01;
-	next.a11[p11] = b11;
-	next.a21[p11] = b21;
-	next.a02[p11] = b02;
-	next.a12[p11] = b12;
-	next.a22[p11] = b22;
-	
+        limit(limitter, b00, c00);
+        limit(limitter, b10, c10);
+        limit(limitter, b20, c20);
+        limit(limitter, b01, c01);
+        limit(limitter, b11, c11);
+        limit(limitter, b21, c21);
+        limit(limitter, b02, c02);
+        limit(limitter, b12, c12);
+        limit(limitter, b22, c22);
+
+	bounce(solid[p00], c00, c22);
+	bounce(solid[p01], c01, c21);
+	bounce(solid[p02], c02, c20);
+	bounce(solid[p10], c10, c12);
+	bounce(solid[p12], c12, c10);
+	bounce(solid[p20], c20, c02);
+	bounce(solid[p21], c21, c01);
+	bounce(solid[p22], c22, c00);
+
+	next.a00[p11] = c00;
+	next.a10[p11] = c10;
+	next.a20[p11] = c20;
+	next.a01[p11] = c01;
+	next.a11[p11] = c11;
+	next.a21[p11] = c21;
+	next.a02[p11] = c02;
+	next.a12[p11] = c12;
+	next.a22[p11] = c22;
       }
     }
   }
