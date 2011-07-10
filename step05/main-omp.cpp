@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <stdlib.h>
 #include <vector>
 using namespace std;
 #include "ppm.h"
@@ -212,13 +213,20 @@ int main (int argc, char **argv) {
     iss >> zoom;
   }
 
+  string dirn;
+  {
+    ostringstream oss; oss << "img" << zoom;
+    dirn = oss.str();
+    system(("mkdir -p " + dirn).c_str());
+  }
+
   Fluid flu(512*zoom,256*zoom);
   Fluid flu2=flu;
   
   for (int t = 0; t < zoom*10001; ++t) {
     if (t % (zoom*100) == 0) {
       ostringstream ossFn;
-      ossFn << "img/" << (100000000+t) << ".ppm";
+      ossFn << dirn << "/" << (100000000+t) << ".ppm";
       cerr << ossFn.str() << endl;
       flu.write(ossFn.str());
     }
