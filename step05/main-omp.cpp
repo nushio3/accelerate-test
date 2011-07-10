@@ -53,12 +53,12 @@ struct Fluid {
     for (int y = 0; y < height; ++y) {
       for (int x = 0; x < width; ++x) {
 	const int p = y  * width + x;
-	const Real r = height/8;
-	const Real oy = height/2;
-	const Real ox = oy;
+	const int r = height/8;
+	const int oy = height/2;
+	const int ox = oy;
 	solid[p] = 64*sq(x-ox) + sq(y-oy) < sq(r) ? 1 : 0;
 	const Real w = Real(1) - solid[p];
-	a00[p] = a01[p] = a02[p] = a10[p] = a20[p] = a21[p] = a22[p] = Real(0);
+	a00[p] = a01[p] = a02[p] = a10[p] = a12[p] = a20[p] = a22[p] = Real(0);
 	a11[p] = w*Real(0.2); 
 	a21[p] = w*(Real(0.8) + 1e-4 * (sin(x) + cos(y)));
       }
@@ -93,8 +93,8 @@ struct Fluid {
 
 	// boundary conditions
 	if (x==0) {
-	  b00 = b01 = b02 = b10 = b20 = b21 = b22 = Real(0);
-	  b11 = Real(0.8); b12 = Real(0.2);
+	  b00 = b01 = b02 = b10 = b12 = b20 = b22 = Real(0);
+	  b11 = Real(0.8); b21 = Real(0.2);
 	}
 
 	b11 += collide(b00,b22);
