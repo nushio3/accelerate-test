@@ -64,7 +64,7 @@ struct Fluid {
 	solid[p] = 64*sq(x-ox) + sq(y-oy) < sq(r) ? 1 : 0;
 	Real w = 0.5*(Real(1) - solid[p]);
 	a00[p] = a02[p] = a10[p] = a12[p] = a20[p] = a22[p] = 0;
-        a01[p] = w*0.1;
+        a01[p] = w*0.18;
 	a11[p] = w*0.7;
 	a21[p] = w*0.2;
       }
@@ -99,12 +99,18 @@ struct Fluid {
         Real b22 = a22[p11];
         
 	// boundary conditions
-	if (x==0 || x == width-1 || solid[p11]>0.5) {
+        {
           const Real w= 0.5;
-	  b00 = b02 = b10 = b12 = b20 = b22 = 0;
-          b01 = w*0.1;
-	  b11 = w*Real(0.7); b21 = w*Real(0.2) + 1e-2 * sin(12*y/height);
-	} 
+          if (x==0 || x == width-1) {
+            b00 = b02 = b10 = b12 = b20 = b22 = 0;
+            b01 = w*0.18;
+            b11 = w*Real(0.7); b21 = w*Real(0.2) + 1e-2 * sin(12*y/height);
+          } 
+          if (solid[p11]>0.5) {
+            b00 = b01 = b02 = b10 = b12 = b20 = b21 = b22 = 0;
+            b11 = 0.5*w;
+          }
+        }
 
         Real n = b00+b01+b02+b10+b11+b12+b20+b21+b22+eps;
         Real mx=-b00-b01-b02            +b20+b21+b22;
@@ -194,9 +200,9 @@ struct Fluid {
 	const Real velx = momx / (dens + eps);
 	const Real vely = momy / (dens + eps);
 	Real 
-	  r = sq(10*vely),
+	  r = (10*vely+0.5),
 	  g = dens,
-	  b = sq(10*velx);
+	  b = (10*velx+0.5);
 	bmp(x,y) = rgb<Real>(r,g,b);
       }
     }
@@ -220,7 +226,7 @@ int main (int argc, char **argv) {
     system(("mkdir -p " + dirn).c_str());
   }
 
-  Fluid flu(512*zoom,256*zoom);
+  Fluid flu(1024*zoom,256*zoom);
   Fluid flu2=flu;
   
   for (int t = 0; t < zoom*10001; ++t) {
