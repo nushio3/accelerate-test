@@ -45,6 +45,7 @@ int main (int argc, char **argv) {
   }
 
   FluidMemory<thrust::device_vector<Real> > flu(1024*zoom,768*zoom);
+  FluidMemory<thrust::host_vector<Real> > flu_host(1024*zoom,768*zoom);
   FluidMemory<thrust::device_vector<Real> >  flu2=flu;
 
   FluidPtr pFlu = flu.ptr();
@@ -58,11 +59,15 @@ int main (int argc, char **argv) {
       ostringstream ossFn;
       ossFn << dirn << "/" << (100000000+t) << ".bin";
       cerr << ossFn.str() << endl;
-      flu.write(ossFn.str(), zoom);
+      flu_host.copyFrom(flu);
+      flu_host.write(ossFn.str(), zoom);
     }
     
     collision<<<256,448>>>(pFlu, pFlu2);
+    cudaThreadSynchronize();
     proceed<<<256,448>>>(pFlu, pFlu2);
+    cudaThreadSynchronize();
+    
   }
   
   return 0;
