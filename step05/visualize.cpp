@@ -119,7 +119,7 @@ void visualize (FILE* ifp, string ofn, int width, int height, string visualizeTy
         Real vx10 = momx[p10]/dens[p10];
         Real vor = vy21-vy01-vx12+vx10;
 
-        vor *= 1000;
+        vor *= 300;
         
         r=-vor;
         g=abs(vor/10);
