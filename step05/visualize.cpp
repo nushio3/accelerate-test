@@ -40,6 +40,47 @@ void visualize (FILE* ifp, string ofn, int width, int height, string visualizeTy
   }
 
   for (int i = 0; i < bmpSize;++i) dens[i] += eps; // avoid div0
+
+  // the preparation path
+  for (int y = 0; y < bmp.height(); ++y) {
+    for (int x = 0; x < bmp.width(); ++x) {
+      const int x1 = (x+1)%width;
+      const int x2 = (x+2)%width;
+      const int y1 = (y+1)%height;
+      const int y2 = (y+2)%height;
+      const int p00 = y  * width + x;
+      const int p10 = y  * width + x1;
+      const int p20 = y  * width + x2;
+      const int p01 = y1 * width + x;
+      const int p11 = y1 * width + x1;
+      const int p21 = y1 * width + x2;
+      const int p02 = y2 * width + x;
+      const int p12 = y2 * width + x1;
+      const int p22 = y2 * width + x2;
+      if (visualizeType == "rnd" || visualizeType == "vor"){
+        Real vx = momx[p11]/dens[p11];
+        Real vy = momy[p11]/dens[p11];
+        Real amp = sqrt(sq(vx)+sq(vy))+eps;
+        Real ex = vx/amp;
+        Real ey = vy/amp;
+        amp*=240;
+        Real myVal = noise[p11];
+        int curAddr = -1;
+        for (int parity = -1; parity<=1; parity+=2) {
+          for (Real t = 0; t <= amp; t+=0.5) {
+            int nx = (int(x1 + 0.5 + parity*t*ex) + width)%width;
+            int ny = (int(y1 + 0.5 + parity*t*ey) + height)%height;
+            int addr = ny*width+nx;
+            if (addr==curAddr) continue;
+            curAddr = addr;
+            noiseNum[addr] += myVal;
+            noiseDen[addr] += 1;
+          }
+        }
+      }
+    }
+  }
+
   
 
   // the first path
@@ -80,26 +121,16 @@ void visualize (FILE* ifp, string ofn, int width, int height, string visualizeTy
         r=-vor;
         g=abs(vor/10);
         b=vor;
+
+        Real bunsan = 0.5*sqrt(max(Real(0),noiseDen[p11]-Real(0.8)));
+        Real gray=0.5 + noiseNum[p11]/noiseDen[p11]*bunsan;
+        gray = max(Real(0), min(Real(1), gray));
+        gray *= 0.5;
+        r+=gray; g+=gray;b+=gray;
+
       } else if (visualizeType == "rnd"){
-        Real vx = momx[p11]/dens[p11];
-        Real vy = momy[p11]/dens[p11];
-        Real amp = sqrt(sq(vx)+sq(vy))+eps;
-        Real ex = vx/amp;
-        Real ey = vy/amp;
-        amp*=240;
-        Real myVal = noise[p11];
-        int curAddr = -1;
-        for (int parity = -1; parity<=1; parity+=2) {
-          for (Real t = 0; t <= amp; t+=0.5) {
-            int nx = (int(x1 + 0.5 + parity*t*ex) + width)%width;
-            int ny = (int(y1 + 0.5 + parity*t*ey) + height)%height;
-            int addr = ny*width+nx;
-            if (addr==curAddr) continue;
-            curAddr = addr;
-            noiseNum[addr] += myVal;
-            noiseDen[addr] += 1;
-          }
-        }
+        Real bunsan = 0.5*sqrt(max(Real(0),noiseDen[p11]-Real(0.8)));
+        r=g=b=noiseNum[p11]/noiseDen[p11]*bunsan+0.5;
       } else {
         cerr << "unsupported visualization type : " << visualizeType << endl;
         return;
@@ -108,30 +139,6 @@ void visualize (FILE* ifp, string ofn, int width, int height, string visualizeTy
     }
   }
 
-  // the second path
-  for (int y = 0; y < bmp.height(); ++y) {
-    for (int x = 0; x < bmp.width(); ++x) {
-      const int x1 = (x+1)%width;
-      const int x2 = (x+2)%width;
-      const int y1 = (y+1)%height;
-      const int y2 = (y+2)%height;
-      const int p00 = y  * width + x;
-      const int p10 = y  * width + x1;
-      const int p20 = y  * width + x2;
-      const int p01 = y1 * width + x;
-      const int p11 = y1 * width + x1;
-      const int p21 = y1 * width + x2;
-      const int p02 = y2 * width + x;
-      const int p12 = y2 * width + x1;
-      const int p22 = y2 * width + x2;
-      if (visualizeType == "rnd"){
-        Real r,g,b;
-        Real bunsan = 0.5*sqrt(max(Real(0),noiseDen[p11]-Real(0.8)));
-        r=g=b=noiseNum[p11]/noiseDen[p11]*bunsan+0.5;
-        bmp(x1,y1) = rgb<Real>(r,g,b);        
-      }
-    }
-  }
   bmp.rescale_max_color(255);
   bmp.write(ofn);
 }

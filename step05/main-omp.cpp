@@ -257,7 +257,7 @@ int main (int argc, char **argv) {
   Fluid flu(1024*zoom,256*zoom);
   Fluid flu2=flu;
   
-  for (int t = 0; t < zoom*10001; ++t) {
+  for (int t = 0; t < zoom*100001; ++t) {
     if (t % (zoom*100) == 0) {
       ostringstream ossFn;
       ossFn << dirn << "/" << (100000000+t) << ".bin";
