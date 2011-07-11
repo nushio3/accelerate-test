@@ -8,6 +8,7 @@ using namespace std;
 typedef float Real;
 
 #include "fluid.h"
+#include "get_time.h"
 
 int zoom;
 Real flowSpeed;
@@ -53,21 +54,26 @@ int main (int argc, char **argv) {
 
   initialize<<<1024,448>>>(flowSpeed, pFlu);
   initialize<<<1024,448>>>(flowSpeed, pFlu2);
+
+  double time_integrated = 0;
   
   for (int t = 0; t < zoom*100001; ++t) {
     if (t % (zoom*100) == 0) {
       ostringstream ossFn;
       ossFn << dirn << "/" << (100000000+t) << ".bin";
-      cerr << ossFn.str() << endl;
+      cerr << ossFn.str() << " : time spent so far " <<  endl;
       flu_host.copyFrom(flu);
       flu_host.write(ossFn.str(), zoom);
     }
-    
+
+    double time_begin = get_time<double>();
+    cudaThreadSynchronize();
     collision<<<256,448>>>(pFlu, pFlu2);
     cudaThreadSynchronize();
     proceed<<<256,448>>>(pFlu, pFlu2);
     cudaThreadSynchronize();
-    
+    double time_end = get_time<double>();
+    time_integrated += time_end - time_begin;
   }
   
   return 0;
