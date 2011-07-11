@@ -42,6 +42,7 @@ void visualize (FILE* ifp, string ofn, int width, int height, string visualizeTy
   for (int i = 0; i < bmpSize;++i) dens[i] += eps; // avoid div0
 
   // the preparation path
+#pragma omp parallel for
   for (int y = 0; y < bmp.height(); ++y) {
     for (int x = 0; x < bmp.width(); ++x) {
       const int x1 = (x+1)%width;
@@ -81,11 +82,13 @@ void visualize (FILE* ifp, string ofn, int width, int height, string visualizeTy
     }
   }
 
-  
-
   // the first path
+  bool failure = false;
+#pragma omp parallel for
   for (int y = 0; y < bmp.height(); ++y) {
+    if (failure) continue;
     for (int x = 0; x < bmp.width(); ++x) {
+      if (failure) continue;
       const int x1 = (x+1)%width;
       const int x2 = (x+2)%width;
       const int y1 = (y+1)%height;
@@ -133,7 +136,7 @@ void visualize (FILE* ifp, string ofn, int width, int height, string visualizeTy
         r=g=b=noiseNum[p11]/noiseDen[p11]*bunsan+0.5;
       } else {
         cerr << "unsupported visualization type : " << visualizeType << endl;
-        return;
+        failure = true; continue;
       }
       bmp(x1,y1) = rgb<Real>(r,g,b);
     }

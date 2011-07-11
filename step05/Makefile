@@ -10,7 +10,7 @@ main-g++.out : main-omp.cpp Makefile
 	g++ -O3 --openmp main-omp.cpp -o main-g++.out 
 
 visualize.out : visualize.cpp
-	g++ -O3 visualize.cpp -o visualize.out
+	g++ -O3 --openmp visualize.cpp -o visualize.out
 
 run : main.out
 	CUDA_PROFILE=1 ./main.out 
