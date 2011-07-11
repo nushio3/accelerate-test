@@ -243,7 +243,7 @@ int main (int argc, char **argv) {
 
   string dirn;
   {
-    ostringstream oss; oss << "img" << zoom;
+    ostringstream oss; oss << "bin/" << zoom;
     dirn = oss.str();
     system(("mkdir -p " + dirn).c_str());
   }
