@@ -184,13 +184,14 @@ struct Fluid {
     FILE *fp=fopen(fn.c_str(), "w"); 
     if (!fp) return;
     {
-      fwrite(&width, sizeof(width), 1, fp);
-      fwrite(&height, sizeof(height), 1, fp);
-      int sizeOfReal = sizeof(Real);
-      fwrite(&sizeOfReal, sizeof(sizeOfReal), 1, fp);
       const int bmpWidth = width/zoom;
       const int bmpHeight = height/zoom;
       const int bmpSize = bmpWidth * bmpHeight;
+
+      fwrite(&bmpWidth, sizeof(bmpWidth), 1, fp);
+      fwrite(&bmpHeight, sizeof(bmpHeight), 1, fp);
+      int sizeOfReal = sizeof(Real);
+      fwrite(&sizeOfReal, sizeof(sizeOfReal), 1, fp);
       
       vector<Real> densBlock(bmpSize),velxBlock(bmpSize),velyBlock(bmpSize);
       

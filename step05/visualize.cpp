@@ -20,6 +20,9 @@ void visualize (FILE* ifp, string ofn, int width, int height, string visualizeTy
   bmp.set_max_color(1);
   const int bmpSize = width*height;
   vector<Real> densBlock(bmpSize), velxBlock(bmpSize), velyBlock(bmpSize);
+  fread(&densBlock[0], sizeof(Real), bmpSize, ifp);
+  fread(&velxBlock[0], sizeof(Real), bmpSize, ifp);
+  fread(&velyBlock[0], sizeof(Real), bmpSize, ifp);
   for (int y = 0; y < bmp.height(); ++y) {
     for (int x = 0; x < bmp.width(); ++x) {
       const int addr = y*width+x;
