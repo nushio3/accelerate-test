@@ -12,6 +12,20 @@ typedef float Real;
 int zoom;
 Real flowSpeed;
 
+__global__ void initialize (Real flowSpeed, FluidPtr pFlu) {
+  pFlu.initialize(flowSpeed);
+}
+
+__global__ void collision (FluidPtr pFlu, FluidPtr pFlu2) {
+  pFlu.collision(pFlu2);
+}
+
+__global__ void proceed (FluidPtr pFlu, FluidPtr pFlu2) {
+  pFlu2.proceed(pFlu);
+}
+
+
+
 int main (int argc, char **argv) {
   if (argc < 3) {
     cerr << "usage : " << argv[0] << " zoom flowSpeed" << endl;
@@ -30,14 +44,14 @@ int main (int argc, char **argv) {
     system(("mkdir -p " + dirn).c_str());
   }
 
-  FluidMemory<vector<Real> > flu(1024*zoom,768*zoom);
-  FluidMemory<vector<Real> >  flu2=flu;
+  FluidMemory<thrust::device_vector<Real> > flu(1024*zoom,768*zoom);
+  FluidMemory<thrust::device_vector<Real> >  flu2=flu;
 
   FluidPtr pFlu = flu.ptr();
   FluidPtr pFlu2 = flu2.ptr();
 
-  pFlu.initialize(flowSpeed);
-  pFlu2.initialize(flowSpeed);
+  initialize<<<1024,448>>>(flowSpeed, pFlu);
+  initialize<<<1024,448>>>(flowSpeed, pFlu2);
   
   for (int t = 0; t < zoom*100001; ++t) {
     if (t % (zoom*100) == 0) {
@@ -46,9 +60,9 @@ int main (int argc, char **argv) {
       cerr << ossFn.str() << endl;
       flu.write(ossFn.str(), zoom);
     }
-      
-    pFlu.collision(pFlu2);
-    pFlu2.proceed(pFlu);
+
+    collision<<<1024,448>>>(pFlu, pFlu2);
+    proceed<<<1024,448>>>(pFlu, pFlu2);
   }
   
   return 0;

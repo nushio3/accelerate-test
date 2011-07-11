@@ -1,12 +1,12 @@
 all: main-g++.out visualize.out
 
-main-nvcc.out : main.cu Makefile
-	nvcc -O3 -arch=sm_20 --ptxas-options=-v  --maxrregcount 16  main.cu -o main.out 
+main-nvcc.out : main-cuda.cu Makefile
+	nvcc -O3 -arch=sm_20 --ptxas-options=-v  --maxrregcount 16  main-cuda.cu -o main.out 
 
-main-icpc.out : main-omp.cpp Makefile
+main-icpc.out : main-omp.cpp fluid.h Makefile
 	icpc -fast -openmp main-omp.cpp -o main-icpc.out 
 
-main-g++.out : main-omp.cpp Makefile
+main-g++.out : main-omp.cpp fluid.h  Makefile
 	g++ -O3 --openmp main-omp.cpp -o main-g++.out 
 
 visualize.out : visualize.cpp

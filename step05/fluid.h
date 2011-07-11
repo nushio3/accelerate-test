@@ -9,9 +9,21 @@
 #include <vector>
 using namespace std;
 
+#ifdef __CUDACC__
+#include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
+#else
+// let the compiler ignore CUDA 
+#define __host__
+#define __device__
+#endif
+
 #define eps  1e-20
 
-template<class T> T sq(const T &x) { return x*x; }
+
+template<class T>
+__device__ __host__
+T sq(const T &x) { return x*x; }
 
 struct FluidPtr {
   int size;
@@ -20,7 +32,7 @@ struct FluidPtr {
 
   Real *a00, *a01, *a02, *a10, *a11, *a12, *a20, *a21, *a22;
   Real *solid;
-
+  __device__ 
   void initialize (Real flowSpeed) {
     for (int y = 0; y < height; ++y) {
       for (int x = 0; x < width; ++x) {
@@ -39,47 +51,42 @@ struct FluidPtr {
     }
   }
 
-
+  __device__
   Real collide (Real &a, Real &b) {
     Real s = a*b/(a+b+eps);
     a-=s; b-=s; return 2*s;
   }
+  __device__
   void thermalize(Real &src, Real &a, Real &b) {
     src *= Real(1)/Real(3);
     a+=src; b+=src;
   }
+  __device__
   void thermalize(Real &src, Real &a, Real &b, Real &c, Real &d) {
     src *= Real(1)/Real(5);
     a+=src; b+=src; c+=src; d+=src;
   }
+  __device__
   void bounce (const Real solidity, Real &src, Real &dest) {
     Real amt = src * solidity; 
     dest += amt;
     src -= amt;
   }
+  __device__
   Real mix(const Real w, const Real n, const Real vx, const Real vy, const Real ux, const Real uy) {
     const Real inp = (ux*vx+uy*vy);
     return n*w*(Real(1) + Real(3) * inp + Real(4.5)*sq(inp) - Real(1.5)*(ux*ux+uy*uy));
   }
 
   
-  void collision (const int t, FluidPtr next) {
+  __device__
+  void collision (FluidPtr next) {
+#ifdef _OPENMP
 #pragma omp parallel for
-    for (int y = 0; y < height-2; ++y) {
-      for (int x = 0; x < width-2; ++x) {
-	const int x1 = x+1;
-	const int x2 = x+2;
-	const int y1 = y+1;
-	const int y2 = y+2;
-	const int p00 = y  * width + x;
-	const int p10 = y  * width + x1;
-	const int p20 = y  * width + x2;
-	const int p01 = y1 * width + x;
-	const int p11 = y1 * width + x1;
-	const int p21 = y1 * width + x2;
-	const int p02 = y2 * width + x;
-	const int p12 = y2 * width + x1;
-	const int p22 = y2 * width + x2;
+#endif
+    for (int y = 1; y < height-1; ++y) {
+      for (int x = 1; x < width-1; ++x) {
+	const int p11 = y * width + x;
         Real b00 = a00[p11];
         Real b10 = a10[p11];
         Real b20 = a20[p11];
@@ -131,8 +138,11 @@ struct FluidPtr {
     }
   }
 
+  __device__
   void proceed (FluidPtr &next) {
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int y = 0; y < height-2; ++y) {
       for (int x = 0; x < width-2; ++x) {
 	const int x1 = x+1;
@@ -167,6 +177,15 @@ struct FluidPtr {
 Real *raw(vector<Real> & vec) {
   return &vec[0];
 }
+
+#ifdef __CUDACC__
+Real *raw(thrust::host_vector<Real> & vec) {
+  return &vec[0];
+}
+Real *raw(thrust::device_vector<Real> & vec) {
+  return thrust::raw_pointer_cast(&*vec.begin());
+}
+#endif
 
 template <class container>
 struct FluidMemory {
