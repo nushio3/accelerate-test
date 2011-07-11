@@ -46,7 +46,7 @@ int main (int argc, char **argv) {
     if (t % (zoom*100) == 0) {
       ostringstream ossFn;
       ossFn << dirn << "/" << (100000000+t) << ".bin";
-      cerr << ossFn.str() << " : time spent so far " <<  endl;
+      cerr << ossFn.str() << " : time spent so far " << time_integrated << endl;
       flu.write(ossFn.str(), zoom);
     }
       
