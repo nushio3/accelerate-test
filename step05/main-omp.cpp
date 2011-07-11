@@ -105,7 +105,7 @@ struct Fluid {
           if (x==0 || x == width-1) {
             b00 = b02 = b10 = b12 = b20 = b22 = 0;
             b01 = w*0.1;
-            b11 = w*Real(0.7); b21 = w*Real(0.2) + 1e-3 * sin(12*y/height);
+            b11 = w*Real(0.7); b21 = w*Real(0.2) + 1e-3 * sin(Real(12)*y/height);
           } 
         }
 

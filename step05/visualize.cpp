@@ -48,11 +48,23 @@ void visualize (FILE* ifp, string ofn, int width, int height, string visualizeTy
       Real r,g,b;
       if (visualizeType == "vel") {
         r = (30*momy[p11]+0.5); g = dens[p11]; b = (30*momx[p11]+0.5);
-      } else if (visualizeType == "vor") {
+      } else if (visualizeType == "nrg") {
         Real vx = momx[p11]/dens[p11];
         Real vy = momy[p11]/dens[p11];
         Real knrg = 0.5*dens[p11]*(sq(vx)+sq(vy));
         r=0;g=enrg[p11]-0.15;b=0; g*=30;
+      } else if (visualizeType == "vor") {
+        Real vx21 = momy[p21]/dens[p21];
+        Real vx01 = momy[p01]/dens[p01];
+        Real vy12 = momy[p12]/dens[p12];
+        Real vy10 = momy[p10]/dens[p10];
+        Real vor = vy12-vy10+vx01-vx21;
+
+        vor *= 1000;
+        
+        r=-vor;
+        g=abs(vor/3);
+        b=vor;
       } else {
         cerr << "unsupported visualization type : " << visualizeType << endl;
         return;
