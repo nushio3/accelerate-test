@@ -14,6 +14,7 @@ using namespace noost::visualization::ppm;
 typedef float Real;
 const Real eps = 1e-20;
 int zoom;
+Real flowSpeed;
 
 template<class T> T sq(const T &x) { return x*x; }
 
@@ -66,7 +67,7 @@ struct Fluid {
 	if(y==0 || y == height-1) solid[p] = 1;
 	Real w = 0.5*(Real(1) - solid[p]);
 	a00[p] = a02[p] = a10[p] = a12[p] = a20[p] = a22[p] = 0;
-        a01[p] = w*0.1;
+        a01[p] = w*0.2*(Real(1)-flowSpeed);
 	a11[p] = w*0.7;
 	a21[p] = w*0.2 + 1e-3 * sin(Real(12)*y/height);;
       }
@@ -232,16 +233,18 @@ struct Fluid {
 };
 
 int main (int argc, char **argv) {
-  if (argc <= 1) {
-    zoom = 1;
+  if (argc <= 2) {
+    zoom = 1; flowSpeed=0.5;
   } else {
     istringstream iss(argv[1]);
     iss >> zoom;
+    istringstream iss2(argv[2]);
+    iss2 >> flowSpeed;
   }
 
   string dirn;
   {
-    ostringstream oss; oss << "bin/" << zoom;
+    ostringstream oss; oss << "bin/" << zoom << "_" << flowSpeed;
     dirn = oss.str();
     system(("mkdir -p " + dirn).c_str());
   }
