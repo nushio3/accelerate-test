@@ -21,6 +21,20 @@ using namespace std;
 #define eps  1e-20
 
 
+
+#ifdef __CUDACC__
+#define X_INIT   threadIdx.x
+#define Y_INIT   blockIdx.x
+#define X_STRIDE blockDim.x
+#define Y_STRIDE gridDim.x
+#else
+#define X_INIT   0
+#define Y_INIT   0
+#define X_STRIDE 1
+#define Y_STRIDE 1
+#endif
+
+
 template<class T>
 __device__ __host__
 T sq(const T &x) { return x*x; }
@@ -34,8 +48,8 @@ struct FluidPtr {
   Real *solid;
   __device__ 
   void initialize (Real flowSpeed) {
-    for (int y = 0; y < height; ++y) {
-      for (int x = 0; x < width; ++x) {
+    for (int y = Y_INIT; y < height; y += Y_STRIDE) {
+      for (int x = X_INIT; x < width; x += X_STRIDE) {
 	const int p = y  * width + x;
 	const Real r = height/24;
 	const Real oy = height/2;
@@ -84,8 +98,8 @@ struct FluidPtr {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int y = 1; y < height-1; ++y) {
-      for (int x = 1; x < width-1; ++x) {
+    for (int y = 1 + Y_INIT; y < height - 1; y += Y_STRIDE) {
+      for (int x = 1 + X_INIT; x < width - 1; x += X_STRIDE) {
 	const int p11 = y * width + x;
         Real b00 = a00[p11];
         Real b10 = a10[p11];
@@ -143,8 +157,8 @@ struct FluidPtr {
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (int y = 0; y < height-2; ++y) {
-      for (int x = 0; x < width-2; ++x) {
+    for (int y = Y_INIT; y < height -2 ; y += Y_STRIDE) {
+      for (int x = X_INIT; x < width -2 ; x += X_STRIDE) {
 	const int x1 = x+1;
 	const int x2 = x+2;
 	const int y1 = y+1;

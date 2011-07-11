@@ -60,9 +60,9 @@ int main (int argc, char **argv) {
       cerr << ossFn.str() << endl;
       flu.write(ossFn.str(), zoom);
     }
-
-    collision<<<1024,448>>>(pFlu, pFlu2);
-    proceed<<<1024,448>>>(pFlu, pFlu2);
+    
+    collision<<<256,448>>>(pFlu, pFlu2);
+    proceed<<<256,448>>>(pFlu, pFlu2);
   }
   
   return 0;
