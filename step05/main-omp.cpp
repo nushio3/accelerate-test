@@ -59,27 +59,28 @@ struct Fluid {
     for (int y = 0; y < height; ++y) {
       for (int x = 0; x < width; ++x) {
 	const int p = y  * width + x;
-	const Real r = height/8;
+	const Real r = height/24;
 	const Real oy = height/2;
-	const Real ox = oy;
+	const Real ox = 4*r;
 	solid[p] = 64*sq(x-ox) + sq(y-oy) < sq(r) ? 1 : 0;
+	if(y==0 || y == height-1) solid[p] = 1;
 	Real w = 0.5*(Real(1) - solid[p]);
 	a00[p] = a02[p] = a10[p] = a12[p] = a20[p] = a22[p] = 0;
         a01[p] = w*0.1;
 	a11[p] = w*0.7;
-	a21[p] = w*0.2;
+	a21[p] = w*0.2 + 1e-3 * sin(Real(12)*y/height);;
       }
     }
   }
   
   void collision (const int t, Fluid& next) {
 #pragma omp parallel for
-    for (int y = 0; y < height; ++y) {
-      for (int x = 0; x < width; ++x) {
-	const int x1 = (x+1)%width;
-	const int x2 = (x+2)%width;
-	const int y1 = (y+1)%height;
-	const int y2 = (y+2)%height;
+    for (int y = 0; y < height-2; ++y) {
+      for (int x = 0; x < width-2; ++x) {
+	const int x1 = x+1;
+	const int x2 = x+2;
+	const int y1 = y+1;
+	const int y2 = y+2;
 	const int p00 = y  * width + x;
 	const int p10 = y  * width + x1;
 	const int p20 = y  * width + x2;
@@ -99,16 +100,6 @@ struct Fluid {
         Real b12 = a12[p11];
         Real b22 = a22[p11];
         
-	// boundary conditions
-        {
-          const Real w= 0.5;
-          if (x==0 || x == width-1) {
-            b00 = b02 = b10 = b12 = b20 = b22 = 0;
-            b01 = w*0.1;
-            b11 = w*Real(0.7); b21 = w*Real(0.2) + 1e-3 * sin(Real(12)*y/height);
-          } 
-        }
-
         Real n = b00+b01+b02+b10+b11+b12+b20+b21+b22+eps;
         Real mx=-b00-b01-b02            +b20+b21+b22;
         Real my=-b00    +b02-b10    +b12-b20    +b22;
@@ -152,12 +143,12 @@ struct Fluid {
 
   void proceed (Fluid &next) {
 #pragma omp parallel for
-    for (int y = 0; y < height; ++y) {
-      for (int x = 0; x < width; ++x) {
-	const int x1 = (x+1)%width;
-	const int x2 = (x+2)%width;
-	const int y1 = (y+1)%height;
-	const int y2 = (y+2)%height;
+    for (int y = 0; y < height-2; ++y) {
+      for (int x = 0; x < width-2; ++x) {
+	const int x1 = x+1;
+	const int x2 = x+2;
+	const int y1 = y+1;
+	const int y2 = y+2;
 	const int p00 = y  * width + x;
 	const int p10 = y  * width + x1;
 	const int p20 = y  * width + x2;
@@ -167,6 +158,7 @@ struct Fluid {
 	const int p02 = y2 * width + x;
 	const int p12 = y2 * width + x1;
 	const int p22 = y2 * width + x2;
+
 	next.a00[p11] = a00[p22] + solid[p22] * a22[p11];
 	next.a10[p11] = a10[p12] + solid[p12] * a12[p11];
 	next.a20[p11] = a20[p02] + solid[p02] * a02[p11];
@@ -254,7 +246,7 @@ int main (int argc, char **argv) {
     system(("mkdir -p " + dirn).c_str());
   }
 
-  Fluid flu(1024*zoom,256*zoom);
+  Fluid flu(1024*zoom,768*zoom);
   Fluid flu2=flu;
   
   for (int t = 0; t < zoom*100001; ++t) {
