@@ -105,7 +105,7 @@ struct Fluid {
           if (x==0 || x == width-1) {
             b00 = b02 = b10 = b12 = b20 = b22 = 0;
             b01 = w*0.1;
-            b11 = w*Real(0.7); b21 = w*Real(0.2) + 1e-2 * sin(12*y/height);
+            b11 = w*Real(0.7); b21 = w*Real(0.2) + 1e-3 * sin(12*y/height);
           } 
         }
 
@@ -193,11 +193,11 @@ struct Fluid {
       int sizeOfReal = sizeof(Real);
       fwrite(&sizeOfReal, sizeof(sizeOfReal), 1, fp);
       
-      vector<Real> densBlock(bmpSize),velxBlock(bmpSize),velyBlock(bmpSize);
+      vector<Real> densBlock(bmpSize),momxBlock(bmpSize),momyBlock(bmpSize),enrgBlock(bmpSize);
       
       for (int y = 0; y < bmpHeight; ++y) {
         for (int x = 0; x < bmpWidth; ++x) {
-          Real dens=0, momx=0, momy=0;
+          Real dens=0, momx=0, momy=0, enrg=0;
           for (int zy = 0; zy < zoom; ++zy) {
             for (int zx = 0; zx < zoom; ++zx) {
               int ix = x * zoom + zx;
@@ -213,23 +213,28 @@ struct Fluid {
               momy 
                 +=-a00[addr]-a10[addr]-a20[addr]
                 +  a02[addr]+a12[addr]+a22[addr];
+              enrg
+                +=2*a00[addr]+a01[addr]+2*a02[addr]
+                +   a10[addr]+         +  a12[addr]
+                + 2*a20[addr]+a21[addr]+2*a22[addr];
             }
           }
-          dens /= zoom*zoom;
-          momx /= zoom*zoom;
-          momy /= zoom*zoom;
-          const Real velx = momx / (dens + eps);
-          const Real vely = momy / (dens + eps);
+          dens /=   zoom*zoom;
+          momx /=   zoom*zoom;
+          momy /=   zoom*zoom;
+          enrg /= 2*zoom*zoom;
           const int addr = y*bmpWidth+x;
           densBlock[addr] = dens;
-          velxBlock[addr] = velx;
-          velyBlock[addr] = vely;
+          momxBlock[addr] = momx;
+          momyBlock[addr] = momy;
+          enrgBlock[addr] = enrg;
         }
       }
 
       fwrite(&densBlock[0], sizeof(Real), bmpSize, fp);
-      fwrite(&velxBlock[0], sizeof(Real), bmpSize, fp);
-      fwrite(&velyBlock[0], sizeof(Real), bmpSize, fp);
+      fwrite(&momxBlock[0], sizeof(Real), bmpSize, fp);
+      fwrite(&momyBlock[0], sizeof(Real), bmpSize, fp);
+      fwrite(&enrgBlock[0], sizeof(Real), bmpSize, fp);
     } fclose(fp);
   }
 };
