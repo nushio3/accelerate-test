@@ -113,8 +113,8 @@ void visualize (FILE* ifp, string ofn, int width, int height, string visualizeTy
         Real knrg = 0.5*dens[p11]*(sq(vx)+sq(vy));
         r=0;g=enrg[p11]-0.15;b=0; g*=30;
       } else if (visualizeType == "vor") {
-        Real vx21 = momy[p21]/dens[p21];
-        Real vx01 = momy[p01]/dens[p01];
+        Real vx21 = momx[p21]/dens[p21];
+        Real vx01 = momx[p01]/dens[p01];
         Real vy12 = momy[p12]/dens[p12];
         Real vy10 = momy[p10]/dens[p10];
         Real vor = vy12-vy10+vx01-vx21;
