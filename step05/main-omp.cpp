@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdio>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -125,11 +126,16 @@ struct Fluid {
         b22 = mix(Real(1)/Real(36), n, 1, 1,vx,vy);
 
 	// solid boundary conditions
-        if (solid[p11]>0.5) {
-          b00 = b01 = b02 = b10 = b12 = b20 = b21 = b22 = 0;
-          b11 = 0.1;
-        }
-
+        Real solidifier = Real(1)-solid[p11];
+        b00 *= solidifier;
+        b10 *= solidifier;
+        b20 *= solidifier;
+        b01 *= solidifier;
+        b11 *= solidifier;
+        b21 *= solidifier;
+        b02 *= solidifier;
+        b12 *= solidifier;
+        b22 *= solidifier;
 
 	next.a00[p11] = b00;
 	next.a10[p11] = b10;
@@ -175,42 +181,55 @@ struct Fluid {
   }
 
   void write (string fn) {
-    ppm<Real> bmp(width/zoom, height/zoom, rgb<Real>(0,0,0));
-    bmp.set_max_color(1);
-    for (int y = 0; y < bmp.height(); ++y) {
-      for (int x = 0; x < bmp.width(); ++x) {
-        Real dens=0, momx=0, momy=0;
-        for (int zy = 0; zy < zoom; ++zy) {
-          for (int zx = 0; zx < zoom; ++zx) {
-            int ix = x * zoom + zx;
-            int iy = y * zoom + zy;
-            int addr = iy * width + ix;
-            dens 
-              +=a00[addr]+a01[addr]+a02[addr]
-              + a10[addr]+a11[addr]+a12[addr]
-              + a20[addr]+a21[addr]+a22[addr];
-            momx 
-              +=-a00[addr]-a01[addr]-a02[addr]
-              +  a20[addr]+a21[addr]+a22[addr];
-            momy 
-              +=-a00[addr]-a10[addr]-a20[addr]
-              +  a02[addr]+a12[addr]+a22[addr];
+    FILE *fp=fopen(fn.c_str(), "w"); 
+    if (!fp) return;
+    {
+      fwrite(&width, sizeof(width), 1, fp);
+      fwrite(&height, sizeof(height), 1, fp);
+      int sizeOfReal = sizeof(Real);
+      fwrite(&sizeOfReal, sizeof(sizeOfReal), 1, fp);
+      const int bmpWidth = width/zoom;
+      const int bmpHeight = height/zoom;
+      const int bmpSize = bmpWidth * bmpHeight;
+      
+      vector<Real> densBlock(bmpSize),velxBlock(bmpSize),velyBlock(bmpSize);
+      
+      for (int y = 0; y < bmpHeight; ++y) {
+        for (int x = 0; x < bmpWidth; ++x) {
+          Real dens=0, momx=0, momy=0;
+          for (int zy = 0; zy < zoom; ++zy) {
+            for (int zx = 0; zx < zoom; ++zx) {
+              int ix = x * zoom + zx;
+              int iy = y * zoom + zy;
+              int addr = iy * width + ix;
+              dens 
+                +=a00[addr]+a01[addr]+a02[addr]
+                + a10[addr]+a11[addr]+a12[addr]
+                + a20[addr]+a21[addr]+a22[addr];
+              momx 
+                +=-a00[addr]-a01[addr]-a02[addr]
+                +  a20[addr]+a21[addr]+a22[addr];
+              momy 
+                +=-a00[addr]-a10[addr]-a20[addr]
+                +  a02[addr]+a12[addr]+a22[addr];
+            }
           }
+          dens /= zoom*zoom;
+          momx /= zoom*zoom;
+          momy /= zoom*zoom;
+          const Real velx = momx / (dens + eps);
+          const Real vely = momy / (dens + eps);
+          const int addr = y*bmpWidth+x;
+          densBlock[addr] = dens;
+          velxBlock[addr] = velx;
+          velyBlock[addr] = vely;
         }
-        dens /= zoom*zoom;
-        momx /= zoom*zoom;
-        momy /= zoom*zoom;
-	const Real velx = momx / (dens + eps);
-	const Real vely = momy / (dens + eps);
-	Real 
-	  r = (30*vely+0.5),
-	  g = dens,
-	  b = (30*velx+0.5);
-	bmp(x,y) = rgb<Real>(r,g,b);
       }
-    }
-    bmp.rescale_max_color(255);
-    bmp.write(fn);
+
+      fwrite(&densBlock[0], sizeof(Real), bmpSize, fp);
+      fwrite(&velxBlock[0], sizeof(Real), bmpSize, fp);
+      fwrite(&velyBlock[0], sizeof(Real), bmpSize, fp);
+    } fclose(fp);
   }
 };
 
@@ -235,7 +254,7 @@ int main (int argc, char **argv) {
   for (int t = 0; t < zoom*10001; ++t) {
     if (t % (zoom*100) == 0) {
       ostringstream ossFn;
-      ossFn << dirn << "/" << (100000000+t) << ".ppm";
+      ossFn << dirn << "/" << (100000000+t) << ".bin";
       cerr << ossFn.str() << endl;
       flu.write(ossFn.str());
     }
