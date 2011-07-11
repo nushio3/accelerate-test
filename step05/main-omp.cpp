@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <iostream>
 #include <sstream>
@@ -6,34 +7,40 @@
 #include <stdlib.h>
 #include <vector>
 using namespace std;
-#include "ppm.h"
-
-using namespace noost::visualization::color;
-using namespace noost::visualization::ppm;
 
 typedef float Real;
-const Real eps = 1e-20;
+#define eps  1e-20
 int zoom;
 Real flowSpeed;
 
 template<class T> T sq(const T &x) { return x*x; }
 
-struct Fluid {
+struct FluidPtr {
   int size;
   int width;
   int height;
 
-  vector<Real> a00, a01, a02, a10, a11, a12, a20, a21, a22;
-  vector<Real> solid;
-  
-  Fluid (int width0, int height0) :
-    size(width0*height0), width(width0), height(height0),
-    a00(size), a01(size), a02(size),
-    a10(size), a11(size), a12(size),
-    a20(size), a21(size), a22(size), solid(size) {
+  Real *a00, *a01, *a02, *a10, *a11, *a12, *a20, *a21, *a22;
+  Real *solid;
 
-    initialize();
+  void initialize () {
+    for (int y = 0; y < height; ++y) {
+      for (int x = 0; x < width; ++x) {
+	const int p = y  * width + x;
+	const Real r = height/24;
+	const Real oy = height/2;
+	const Real ox = 4*r;
+	solid[p] = 64*sq(x-ox) + sq(y-oy) < sq(r) ? 1 : 0;
+	if(y==0 || y == height-1) solid[p] = 1;
+	Real w = 0.5*(Real(1) - solid[p]);
+	a00[p] = a02[p] = a10[p] = a12[p] = a20[p] = a22[p] = 0;
+	a01[p] = w*0.2*(Real(1)-flowSpeed);
+	a11[p] = w*0.7;
+	a21[p] = w*0.2 + 1e-3 * sin(Real(12)*y/height);;
+      }
+    }
   }
+
 
   Real collide (Real &a, Real &b) {
     Real s = a*b/(a+b+eps);
@@ -56,25 +63,9 @@ struct Fluid {
     const Real inp = (ux*vx+uy*vy);
     return n*w*(Real(1) + Real(3) * inp + Real(4.5)*sq(inp) - Real(1.5)*(ux*ux+uy*uy));
   }
-  void initialize () {
-    for (int y = 0; y < height; ++y) {
-      for (int x = 0; x < width; ++x) {
-	const int p = y  * width + x;
-	const Real r = height/24;
-	const Real oy = height/2;
-	const Real ox = 4*r;
-	solid[p] = 64*sq(x-ox) + sq(y-oy) < sq(r) ? 1 : 0;
-	if(y==0 || y == height-1) solid[p] = 1;
-	Real w = 0.5*(Real(1) - solid[p]);
-	a00[p] = a02[p] = a10[p] = a12[p] = a20[p] = a22[p] = 0;
-        a01[p] = w*0.2*(Real(1)-flowSpeed);
-	a11[p] = w*0.7;
-	a21[p] = w*0.2 + 1e-3 * sin(Real(12)*y/height);;
-      }
-    }
-  }
+
   
-  void collision (const int t, Fluid& next) {
+  void collision (const int t, FluidPtr next) {
 #pragma omp parallel for
     for (int y = 0; y < height-2; ++y) {
       for (int x = 0; x < width-2; ++x) {
@@ -142,7 +133,7 @@ struct Fluid {
     }
   }
 
-  void proceed (Fluid &next) {
+  void proceed (FluidPtr &next) {
 #pragma omp parallel for
     for (int y = 0; y < height-2; ++y) {
       for (int x = 0; x < width-2; ++x) {
@@ -173,6 +164,40 @@ struct Fluid {
     }    
   }
 
+};
+
+Real *raw(vector<Real> & vec) {
+  return &vec[0];
+}
+
+template <class container>
+struct FluidMemory {
+  int size;
+  int width;
+  int height;
+
+  container a00, a01, a02, a10, a11, a12, a20, a21, a22;
+  container solid;
+  FluidMemory (int width0, int height0) :
+    size(width0*height0), width(width0), height(height0),
+    a00(size), a01(size), a02(size),
+    a10(size), a11(size), a12(size),
+    a20(size), a21(size), a22(size), solid(size) {
+  }
+  FluidPtr ptr() {
+    FluidPtr ret;
+    ret.size=size; ret.width=width; ret.height=height;
+    ret.a00 = raw(a00);
+    ret.a10 = raw(a10);
+    ret.a20 = raw(a20);
+    ret.a01 = raw(a01);
+    ret.a11 = raw(a11);
+    ret.a21 = raw(a21);
+    ret.a02 = raw(a02);
+    ret.a12 = raw(a12);
+    ret.a22 = raw(a22);
+    return ret;
+  }
   void write (string fn) {
     FILE *fp=fopen(fn.c_str(), "w"); 
     if (!fp) return;
@@ -232,6 +257,9 @@ struct Fluid {
   }
 };
 
+
+
+
 int main (int argc, char **argv) {
   if (argc <= 2) {
     zoom = 1; flowSpeed=0.5;
@@ -249,8 +277,11 @@ int main (int argc, char **argv) {
     system(("mkdir -p " + dirn).c_str());
   }
 
-  Fluid flu(1024*zoom,768*zoom);
-  Fluid flu2=flu;
+  FluidMemory<vector<Real> > flu(1024*zoom,768*zoom);
+  FluidMemory<vector<Real> >  flu2=flu;
+
+  FluidPtr pFlu = flu.ptr();
+  FluidPtr pFlu2 = flu2.ptr();
   
   for (int t = 0; t < zoom*100001; ++t) {
     if (t % (zoom*100) == 0) {
@@ -260,8 +291,8 @@ int main (int argc, char **argv) {
       flu.write(ossFn.str());
     }
       
-    flu.collision(t,flu2);
-    flu2.proceed(flu);
+    pFlu.collision(t,pFlu2);
+    pFlu2.proceed(pFlu);
   }
   
   return 0;
