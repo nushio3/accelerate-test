@@ -165,6 +165,7 @@ int main (int argc, char **argv) {
     fread(&width, sizeof(width), 1, fp);
     fread(&height, sizeof(height), 1, fp);
     fread(&sizeOfReal, sizeof(sizeOfReal), 1, fp);
+    cerr << width << " " << height << endl;
     if (sizeOfReal==4) {
       visualize<float>(fp, ofn, width, height, visualizeType);
     } else if (sizeOfReal==8) {

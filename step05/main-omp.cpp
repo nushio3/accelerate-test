@@ -184,7 +184,7 @@ struct FluidMemory {
     a10(size), a11(size), a12(size),
     a20(size), a21(size), a22(size), solid(size) {
   }
-  FluidPtr ptr() {
+  FluidPtr ptr () {
     FluidPtr ret;
     ret.size=size; ret.width=width; ret.height=height;
     ret.a00 = raw(a00);
@@ -196,6 +196,7 @@ struct FluidMemory {
     ret.a02 = raw(a02);
     ret.a12 = raw(a12);
     ret.a22 = raw(a22);
+    ret.solid = raw(solid);
     return ret;
   }
   void write (string fn) {
@@ -282,6 +283,9 @@ int main (int argc, char **argv) {
 
   FluidPtr pFlu = flu.ptr();
   FluidPtr pFlu2 = flu2.ptr();
+
+  pFlu.initialize();
+  pFlu2.initialize();
   
   for (int t = 0; t < zoom*100001; ++t) {
     if (t % (zoom*100) == 0) {
