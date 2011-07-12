@@ -8,8 +8,8 @@ myShape :: A.DIM1
 myShape =  A.Z :. 10
 
 xs, ys :: Vector Float
-xs = A.fromList myShape [83,72,73,78,82,89,65,75,85,33]
-ys = A.fromList myShape [73,75,65,32,77,85,83,85,77,69]
+xs = A.fromList myShape $ cycle [83,72,73,78,82,89,65,75,85,33]
+ys = A.fromList myShape $ cycle [73,75,65,32,77,85,83,85,77,69]
 
 accXs, accYs :: Acc (Vector Float)
 accXs = A.use xs
@@ -22,7 +22,7 @@ accAns :: Acc (Scalar Float)
 accAns = dotp accXs accYs
 
 ans :: Scalar Float
-ans = run $ accAns
+ans = run accAns
 
 main :: IO ()
 main = do
