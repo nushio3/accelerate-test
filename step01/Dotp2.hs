@@ -26,5 +26,8 @@ ans = run $ accAns
 
 main :: IO ()
 main = do
-  print ans
+  putStrLn $ "xs    : " ++ show xs
+  putStrLn $ "accXs : " ++ show accXs
+  putStrLn $ "accAns: " ++ show accAns
+  putStrLn $ "ans   : " ++ show ans
 
