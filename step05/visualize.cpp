@@ -64,7 +64,7 @@ void visualize (FILE* ifp, string ofn, int width, int height, string visualizeTy
         Real amp = sqrt(sq(vx)+sq(vy))+eps;
         Real ex = vx/amp;
         Real ey = vy/amp;
-        amp*=240;
+        amp*=80;
         Real myVal = noise[p11];
         int curAddr = -1;
         for (int parity = -1; parity<=1; parity+=2) {
