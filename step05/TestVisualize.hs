@@ -1,25 +1,37 @@
 #!/usr/bin/env runhaskell
 {-# OPTIONS -Wall #-}
-import qualified Data.Binary as Bin
-import Data.Int
+import qualified Data.Binary.IEEE754 as Bin
+import qualified Data.Binary.Put as Bin
+import Data.Word
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as BS
 import System.Environment
 
-width, height, realSize :: Int32
+width, height, bmpSize, realSize :: Num a => a
 width = 1024
 height = 768
+bmpSize = 1 --width * height
 realSize = 4
 
-encode :: Bin.Binary a => a -> ByteString
-encode = BS.pack . reverse . BS.unpack . Bin.encode
+encodeI :: Word32 -> ByteString
+encodeI = Bin.runPut . Bin.putWord32le
+
+encodeF :: Float -> ByteString
+encodeF = Bin.runPut . Bin.putFloat32le
 
 header :: ByteString
-header = BS.concat $ map encode [width, height, realSize]
+header = BS.concat $ map encodeI [width, height, realSize]
+
+dens, momx, momy, ener :: ByteString
+dens = BS.concat $ replicate bmpSize $ encodeF (1.0 :: Float)
+momx = BS.concat $ replicate bmpSize $ encodeF (0.0 :: Float)
+momy = BS.concat $ replicate bmpSize $ encodeF (0.0 :: Float)
+ener = BS.concat $ replicate bmpSize $ encodeF (1.0 :: Float)
+
 
 main :: IO ()
 main = do
   (fn:_) <- getArgs
-  BS.writeFile fn header
+  BS.writeFile fn $ BS.concat [header, dens]
   
 
