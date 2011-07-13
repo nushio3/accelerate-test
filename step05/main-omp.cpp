@@ -13,6 +13,15 @@ typedef float Real;
 int zoom;
 Real flowSpeed;
 
+void collision (FluidPtr pFlu, FluidPtr pFlu2) {
+  pFlu.collision(pFlu2);
+  pFlu2.proceed(pFlu);
+}
+
+void proceed (FluidPtr pFlu, FluidPtr pFlu2) {
+  pFlu2.proceed(pFlu);
+}
+
 int main (int argc, char **argv) {
   if (argc < 3) {
     cerr << "usage : " << argv[0] << " zoom flowSpeed" << endl;
@@ -51,8 +60,8 @@ int main (int argc, char **argv) {
     }
       
     double time_begin = get_time<double>();
-    pFlu.collision(pFlu2);
-    pFlu2.proceed(pFlu);
+    collision(pFlu, pFlu2);
+    proceed(pFlu, pFlu2);
     double time_end = get_time<double>();
     time_integrated += time_end - time_begin;
   }
