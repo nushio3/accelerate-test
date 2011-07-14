@@ -20,8 +20,6 @@ using namespace std;
 
 #define eps  Real(1e-20)
 
-
-
 #ifdef __CUDACC__
 #define X_INIT   threadIdx.x
 #define Y_INIT   blockIdx.x
