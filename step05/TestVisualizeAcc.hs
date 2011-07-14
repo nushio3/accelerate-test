@@ -1,7 +1,9 @@
 #!/usr/bin/env runhaskell
 {-# LANGUAGE TypeOperators, TypeSynonymInstances #-}
 {-# OPTIONS -Wall #-}
-import Data.Array.Accelerate (Acc, Scalar, (:.)(..), Z(..), Exp)
+import Data.Array.Accelerate 
+  (Acc, Exp, Scalar, Z(..),
+   (:.)(..), (?), (<*))
 import Data.Array.Accelerate.CUDA (run)
 import qualified Data.Array.Accelerate.Smart as Smart
 import qualified Data.Array.Accelerate as A
@@ -20,6 +22,9 @@ width = 1024
 height = 768
 bmpSize = width * height
 realSize = 4
+sq :: Num a => a -> a
+sq x = x*x
+
 -- The Reality is Floating. And the World is 2-dimensional! 
 type Real  = Float
 type World = A.Array A.DIM2
@@ -46,12 +51,12 @@ instance CEncode Double where
 header :: ByteString
 header = BS.concat $ map cEncode [width, height, realSize :: Word32]
 
-dens, momx, momy, ener :: Acc (World Real)
-dens = createWorld (\_ _ -> 1.0)
-momx = createWorld (\_ y -> 0.1 * sin (y/30))
-momy = createWorld (\x _ -> 0.1 * cos (x/30))
-ener = createWorld (\_ _ -> 4.2)
-
+dens, momx, momy, ener, solid :: Acc (World Real)
+dens  = createWorld (\_ _ -> 1.0)
+momx  = createWorld (\_ y -> 0.1 * sin (y/30))
+momy  = createWorld (\x _ -> 0.1 * cos (x/30))
+ener  = createWorld (\_ _ -> 4.2)
+solid = createWorld (\x y -> 64*sq(x-height/6) + sq(y-height/2) <* sq(height/24) ? (1,0))
 
 
 createWorld :: (Exp Real -> Exp Real -> Exp Real) -> Acc (World Real)
