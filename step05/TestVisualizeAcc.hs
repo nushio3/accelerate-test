@@ -36,8 +36,8 @@ header = BS.concat $ map encodeI [width, height, realSize]
 
 dens, momx, momy, ener :: Acc (World Real)
 dens = createWorld (\_ _ -> 1.0)
-momx = createWorld (\_ y -> 0.1 * sin (y/100))
-momy = createWorld (\x _ -> 0.1 * cos (x/100))
+momx = createWorld (\_ y -> 0.1 * sin (y/30))
+momy = createWorld (\x _ -> 0.1 * cos (x/30))
 ener = createWorld (\_ _ -> 4.2)
 
 -- The Reality is Floating. And the World is 2-dimensional! 
@@ -60,7 +60,7 @@ createWorld f = A.generate (Smart.Const worldShape) (f' . unindex2 )
 
 encodeWorld :: World Real -> ByteString
 encodeWorld w = BS.concat $ 
-  map encodeR [A.indexArray w (Z:.i:.j)| i<-[0..width-1], j<-[0..height-1] ]
+  map encodeR [A.indexArray w (Z:.i:.j)| j<-[0..height-1],i<-[0..width-1]]
 
 main :: IO ()
 main = do
