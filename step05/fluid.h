@@ -18,7 +18,7 @@ using namespace std;
 #define __device__
 #endif
 
-#define eps  1e-20
+#define eps  Real(1e-20)
 
 
 
@@ -56,11 +56,11 @@ struct FluidPtr {
 	const Real ox = 4*r;
 	solid[p] = 64*sq(x-ox) + sq(y-oy) < sq(r) ? 1 : 0;
 	if(y==0 || y == height-1) solid[p] = 1;
-	Real w = 0.5*(Real(1) - solid[p]);
+	Real w = Real(0.5)*(Real(1) - solid[p]);
 	a00[p] = a02[p] = a10[p] = a12[p] = a20[p] = a22[p] = 0;
-	a01[p] = w*0.2*(Real(1)-flowSpeed);
-	a11[p] = w*0.7;
-	a21[p] = w*0.2 + 1e-3 * sin(Real(12)*y/height);;
+	a01[p] = w*Real(0.2)*(Real(1)-flowSpeed);
+	a11[p] = w*Real(0.7);
+	a21[p] = w*Real(0.2) + Real(1e-3) * sin(Real(12)*y/height);;
       }
     }
   }

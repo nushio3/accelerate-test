@@ -1,7 +1,7 @@
 all: main-g++.out visualize.out
 
 main-nvcc.out : main-cuda.cu fluid.h Makefile
-	nvcc -O3 -arch=sm_20 --ptxas-options=-v  main-cuda.cu -o main-nvcc.out  # --maxrregcount 16 
+	nvcc -O3 -arch=sm_20 --ptxas-options=-v  main-cuda.cu -o main-nvcc.out  
 
 ptx: main-cuda.cu Makefile
 	nvcc -O3 -arch=sm_20 --ptxas-options=-v  main-cuda.cu --ptx
