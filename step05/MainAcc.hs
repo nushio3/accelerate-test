@@ -70,7 +70,6 @@ initWorld = createWorld f
     solid x y = 64*sq(x-height/6) + sq(y-height/2) <* sq(height/24) ? (1,0)
     zeros = A.constant (0,0,0)
 
-
 createWorld :: (A.Elt a) => (Exp Real -> Exp Real -> Exp a) -> Acc (World a)
 createWorld f = A.generate (Smart.Const worldShape) (f' . unindex2 )
   where
@@ -79,6 +78,9 @@ createWorld f = A.generate (Smart.Const worldShape) (f' . unindex2 )
         j = A.fromIntegral j'
       in f i j
 
+density :: Cell Real -> Real
+density ((a00,a10,a20),(a01,a11,a21),(a02,a12,22),_) 
+  = a00+a10+a20+a01+a11+a21+a02+a12+a22
 
 main :: IO ()
 main = do
