@@ -78,14 +78,28 @@ createWorld f = A.generate (Smart.Const worldShape) (f' . unindex2 )
         j = A.fromIntegral j'
       in f i j
 
-density :: Cell Real -> Real
-density ((a00,a10,a20),(a01,a11,a21),(a02,a12,22),_) 
-  = a00+a10+a20+a01+a11+a21+a02+a12+a22
+unliftc :: Exp (Cell Real) -> Cell (Exp Real)
+unliftc c = let
+    (a0,a1,a2,s)  = A.unlift c
+    (a00,a10,a20) = A.unlift a0
+    (a01,a11,a21) = A.unlift a1
+    (a02,a12,a22) = A.unlift a2
+  in ((a00,a10,a20),(a01,a11,a21),(a02,a12,a22),s) 
+
+density :: Exp (Cell Real) -> Exp Real
+density c = let ((a00,a10,a20),(a01,a11,a21),(a02,a12,a22),_) = unliftc c
+  in a00+a10+a20+a01+a11+a21+a02+a12+a22
+
+wd :: Acc (World Real)
+wd = A.map density initWorld
+
+wcc :: Acc (World (Cell (Exp Real))) 
+wcc = undefined
 
 main :: IO ()
 main = do
   (fn:_) <- getArgs
   BS.writeFile fn $ BS.concat $ 
-      [header] -- ++ map (cEncode . run) [dens, momx, momy, ener]
+      [header] ++ map (cEncode . run) [wd]
   
 
