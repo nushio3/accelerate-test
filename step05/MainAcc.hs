@@ -86,20 +86,28 @@ unliftc c = let
     (a02,a12,a22) = A.unlift a2
   in ((a00,a10,a20),(a01,a11,a21),(a02,a12,a22),s) 
 
-density :: Exp (Cell Real) -> Exp Real
-density c = let ((a00,a10,a20),(a01,a11,a21),(a02,a12,a22),_) = unliftc c
+dens :: Exp (Cell Real) -> Exp Real
+dens c = let ((a00,a10,a20),(a01,a11,a21),(a02,a12,a22),_) = unliftc c
   in a00+a10+a20+a01+a11+a21+a02+a12+a22
 
-wd :: Acc (World Real)
-wd = A.map density initWorld
+momx :: Exp (Cell Real) -> Exp Real
+momx c = let ((a00,_,a20),(a01,_,a21),(a02,_,a22),_) = unliftc c
+  in -a00+a20+a01+a21-a02+a22
 
-wcc :: Acc (World (Cell (Exp Real))) 
-wcc = undefined
+momy :: Exp (Cell Real) -> Exp Real
+momy c = let ((a00,a10,a20),(_,_,_),(a02,a12,a22),_) = unliftc c
+  in -a00-a10-a20+a02+a12+a22
+
+enrg :: Exp (Cell Real) -> Exp Real
+enrg c = let ((a00,a10,a20),(a01,_,a21),(a02,a12,a22),_) = unliftc c
+  in 2*a00+a10+2*a20+a01+a21+2*a02+a12+2*a22
+
+
 
 main :: IO ()
 main = do
   (fn:_) <- getArgs
   BS.writeFile fn $ BS.concat $ 
-      [header] ++ map (cEncode . run) [wd]
+      [header] ++ map (\f -> cEncode $ run $ A.map f initWorld) [dens, momx, momy, enrg]
   
 
