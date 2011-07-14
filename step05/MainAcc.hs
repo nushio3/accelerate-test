@@ -107,7 +107,8 @@ enrg c = let ((a00,a10,a20),(a01,_,a21),(a02,a12,a22),_) = unliftc c
 main :: IO ()
 main = do
   (fn:_) <- getArgs
+  print $ A.map dens initWorld
+  putStrLn $ take 10 $ show $ run $ A.map dens initWorld
   BS.writeFile fn $ BS.concat $ 
       [header] ++ map (\f -> cEncode $ run $ A.map f initWorld) [dens, momx, momy, enrg]
-  
 
