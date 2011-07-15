@@ -22,6 +22,8 @@ width = 1024
 height = 768
 bmpSize = width * height
 realSize = 4
+eps :: (Fractional a) => a
+eps = 1e-20
 sq :: Num a => a -> a
 sq x = x*x
 
@@ -56,18 +58,25 @@ instance (CEncode e)=>CEncode (World e) where
 header :: ByteString
 header = BS.concat $ map cEncode [width, height, realSize :: Word32]
 
--- Simulation tools
-
+-- Basic Definitions for Simulation 
 type Cell a = ((a,a,a) , (a,a,a) , (a,a,a) , a)
 type AWR = Acc (World Real)
 
-initWorld :: Cell AWR
-initWorld = (zeros, mids, zeros, solid)
-  where
-    mids  = (cw 0.1, cw 0.7, createWorld (\x y -> 0.2 + 0.001 * (12*y/height)))
-    solid = createWorld (\x y -> 64*sq(x-height/6) + sq(y-height/2) <* sq(height/24) ? (1,0))
-    cw  a = createWorld (\x y -> a)
-    zeros = (cw 0,cw 0,cw 0)
+instance Eq AWR where
+  (==) = undefined
+instance Num AWR where
+  (+) = A.zipWith (+)
+  (-) = A.zipWith (-)
+  (*) = A.zipWith (*)
+  abs = A.map abs
+  signum = A.map signum
+  fromInteger n =  createWorld (\_ _ -> fromInteger n)
+instance Fractional AWR where
+  (/)   = A.zipWith (/)
+  recip = A.map recip
+  fromRational x =  createWorld (\_ _ -> fromRational x)
+
+
 
 createWorld :: (A.Elt a) => (Exp Real -> Exp Real -> Exp a) -> Acc (World a)
 createWorld f = A.generate (Smart.Const worldShape) (f' . unindex2 )
@@ -76,7 +85,6 @@ createWorld f = A.generate (Smart.Const worldShape) (f' . unindex2 )
         i = A.fromIntegral i'
         j = A.fromIntegral j'
       in f i j
-
 
 convolute :: [Exp Real->Exp Real] -> Cell AWR -> AWR
 convolute fs c = let ((a00,a10,a20),(a01,a11,a21),(a02,a12,a22),_) = c
@@ -91,6 +99,42 @@ momy = convolute [((-1)*),((-1)*),((-1)*),const 0,const 0,const 0,id,id,id]
 enrg = convolute [id,(0.5*),id,
                   (0.5*),const 0,(0.5*),
                   id,(0.5*),id]
+-- Implementation of the Initialization
+initWorld :: Cell AWR
+initWorld = (zeros, mids, zeros, solid)
+  where
+    mids  = (cw 0.1, cw 0.7, createWorld (\_ y -> 0.2 + 0.001 * (12*y/height)))
+    solid = createWorld (\x y -> 64*sq(x-height/6) + sq(y-height/2) <* sq(height/24) ? (1,0))
+    cw  a = createWorld (\_ _ -> a)
+    zeros = (cw 0,cw 0,cw 0)
+
+-- Implementation of the Evolution 
+mix :: AWR -> AWR -> AWR -> AWR -> AWR -> AWR -> AWR
+mix w n vx vy ux uy = n*w*sumo
+  where
+    inp  = vx*ux + vy*uy
+    sumo = 1 + 3*inp + 4.5*inp^(2::Integer) - 1.5*(ux*ux + uy*uy)
+
+collision :: Cell AWR -> Cell AWR
+collision c = c2
+  where
+    (_,_,_,solid) = c
+    n  = dens c + fromRational eps
+    mx = momx c
+    my = momy c
+    vx = mx / n
+    vy = my / n
+    b00 = sf $ mix (1/36) n (-1) (-1) vx vy
+    b10 = sf $ mix (1/ 9) n   0  (-1) vx vy
+    b20 = sf $ mix (1/36) n   1  (-1) vx vy
+    b01 = sf $ mix (1/ 9) n (-1)   0  vx vy
+    b11 = sf $ mix (4/ 9) n   0    0  vx vy
+    b21 = sf $ mix (1/ 9) n   1    0  vx vy
+    b02 = sf $ mix (1/36) n (-1)   1  vx vy
+    b12 = sf $ mix (1/ 9) n   0    1  vx vy
+    b22 = sf $ mix (1/36) n   1    1  vx vy
+    sf  = ((1-solid)*)
+    c2 = ((b00,b10,b20),(b01,b11,b21),(b02,b12,b22),solid)
 
 main :: IO ()
 main = do
