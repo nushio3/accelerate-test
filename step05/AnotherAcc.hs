@@ -81,7 +81,6 @@ instance Fractional AWR where
   fromRational x =  createWorld (\_ _ -> fromRational x)
 
 
-
 createWorld :: (A.Elt a) => (Exp Real -> Exp Real -> Exp a) -> Acc (World a)
 createWorld f = A.generate (Smart.Const worldShape) (f' . unindex2 )
   where
@@ -168,6 +167,17 @@ main = do
   let iter = read iterStr
       nextWorld = update $ initWorld
       update = foldl1 (.) $ replicate iter (proceed . collision)
-  BS.writeFile fn $ BS.concat $ 
-      [header] ++ map (\f -> cEncode $ run $ f nextWorld) [dens,momx,momy,enrg]
+  if fn == "-X" 
+  then loop 0 update initWorld
+  else do
+    BS.writeFile fn $ BS.concat $ 
+        [header] ++ map (\f -> cEncode $ run $ f nextWorld) [dens,momx,momy,enrg]
 
+loop :: Int -> (Cell AWR -> Cell AWR) -> Cell AWR -> IO ()
+loop n update w = do
+  let fn = "bin/3/" ++ show (100000000+n) ++ ".bin"
+      nextWorld = update $ initWorld
+  hPutStrLn stderr fn
+  BS.writeFile fn $ BS.concat $ 
+      [header] ++ map (\f -> cEncode $ run $ f w) [dens,momx,momy,enrg]
+  loop (n+1) update (nextWorld)
