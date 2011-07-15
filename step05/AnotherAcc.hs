@@ -160,9 +160,10 @@ proceed c = c2
 
 main :: IO ()
 main = do
-  (fn:_) <- getArgs
+  (iterStr:fn:_) <- getArgs
   BS.writeFile fn $ BS.concat $ 
       [header] ++ map (\f -> cEncode $ run $ f nextWorld) [dens,momx,momy,enrg]
   where
+    iter = read iterStr
     nextWorld = update $ initWorld
-    update = foldl1 (.) $ replicate 10 (proceed . collision)
+    update = foldl1 (.) $ replicate iter (proceed . collision)
