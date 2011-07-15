@@ -1,5 +1,5 @@
 #!/usr/bin/env runhaskell
-{-# LANGUAGE TypeOperators, TypeSynonymInstances #-}
+{-# LANGUAGE TypeOperators, TypeSynonymInstances, FlexibleInstances #-}
 {-# OPTIONS -Wall #-}
 import Data.Array.Accelerate 
   (Acc, Exp, Scalar, Z(..),
@@ -17,10 +17,13 @@ import Prelude hiding (Real)
 import System.Environment
 import System.IO
 
-width, height, bmpSize, realSize :: Num a => a
-width = 1024
-height = 768
-bmpSize = width * height
+width, height, bmpWidth, bmpHeight, zoom, realSize :: Num a => a
+bmpWidth = 1024
+bmpHeight = 768
+zoom = 1
+width = bmpWidth * zoom
+height = bmpHeight * zoom
+
 realSize = 4
 eps :: (Fractional a) => a
 eps = 1e-20
@@ -51,9 +54,10 @@ instance CEncode Float where
 instance CEncode Double where
   cEncode = Bin.runPut . Bin.putFloat64le
 
-instance (CEncode e)=>CEncode (World e) where
+instance CEncode (World Real) where
   cEncode w = BS.concat $ map cEncode 
-    [A.indexArray w (Z:.i:.j)| j<-[0..height-1],i<-[0..width-1]]
+    [(/(zoom*zoom)) $ sum [A.indexArray w (Z:.(i*zoom+zi):.(j*zoom+zj)) | zj <- [0..zoom-1], zi <-[0..zoom-1]]
+       | j<-[0..bmpHeight-1],i<-[0..bmpWidth-1]]
 
 header :: ByteString
 header = BS.concat $ map cEncode [width, height, realSize :: Word32]
@@ -161,9 +165,9 @@ proceed c = c2
 main :: IO ()
 main = do
   (iterStr:fn:_) <- getArgs
+  let iter = read iterStr
+      nextWorld = update $ initWorld
+      update = foldl1 (.) $ replicate iter (proceed . collision)
   BS.writeFile fn $ BS.concat $ 
       [header] ++ map (\f -> cEncode $ run $ f nextWorld) [dens,momx,momy,enrg]
-  where
-    iter = read iterStr
-    nextWorld = update $ initWorld
-    update = foldl1 (.) $ replicate iter (proceed . collision)
+
