@@ -20,7 +20,7 @@ import System.IO
 width, height, bmpWidth, bmpHeight, zoom, realSize :: Num a => a
 bmpWidth = 1024
 bmpHeight = 768
-zoom = 1
+zoom = 2
 width = bmpWidth * zoom
 height = bmpHeight * zoom
 
@@ -60,7 +60,7 @@ instance CEncode (World Real) where
        | j<-[0..bmpHeight-1],i<-[0..bmpWidth-1]]
 
 header :: ByteString
-header = BS.concat $ map cEncode [width, height, realSize :: Word32]
+header = BS.concat $ map cEncode [bmpWidth, bmpHeight, realSize :: Word32]
 
 -- Basic Definitions for Simulation 
 type Cell a = ((a,a,a) , (a,a,a) , (a,a,a) , a)
