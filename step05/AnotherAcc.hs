@@ -152,9 +152,9 @@ proceed c = c2
     ste22 (_,_,(_,_,x)) = x
     [b00,b10,b20,b01,b11,b21,b02,b12,b22] = 
       zipWith treat
-                [ste00,ste10,ste20,ste01,ste11,ste21,ste02,ste12,ste22]
+                [ste22,ste12,ste02,ste21,ste11,ste01,ste20,ste10,ste00]
                 [a00,a10,a20,a01,a11,a21,a02,a12,a22]
-    treat ste src = A.stencil ste A.Wrap src
+    treat ste src = (A.stencil ste A.Wrap solid) * src + A.stencil ste A.Wrap src
     c2=((b00,b10,b20),(b01,b11,b21),(b02,b12,b22),solid)
 
 main :: IO ()
@@ -163,4 +163,4 @@ main = do
   BS.writeFile fn $ BS.concat $ 
       [header] ++ map (\f -> cEncode $ run $ f nextWorld) [dens,momx,momy,enrg]
   where
-    nextWorld = collision initWorld
+    nextWorld = proceed . collision $ initWorld
