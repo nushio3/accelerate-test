@@ -65,9 +65,9 @@ type AWR = Acc (World Real)
 instance Eq AWR where
   (==) = undefined
 instance Num AWR where
-  (+) = A.zipWith (+)
-  (-) = A.zipWith (-)
-  (*) = A.zipWith (*)
+  a+b = A.use $ run $ A.zipWith (+) a b
+  a-b = A.use $ run $ A.zipWith (-) a b
+  a*b = A.use $ run $ A.zipWith (*) a b
   abs = A.map abs
   signum = A.map signum
   fromInteger n =  createWorld (\_ _ -> fromInteger n)
@@ -140,5 +140,6 @@ main :: IO ()
 main = do
   (fn:_) <- getArgs
   BS.writeFile fn $ BS.concat $ 
-      [header] ++ map (\f -> cEncode $ run $ f initWorld) [dens,momx,momy,enrg]
-
+      [header] ++ map (\f -> cEncode $ run $ f nextWorld) [dens,momx,momy,enrg]
+  where
+    nextWorld = collision initWorld
