@@ -64,32 +64,10 @@ struct FluidPtr {
   }
 
   __device__
-  Real collide (Real &a, Real &b) {
-    Real s = a*b/(a+b+eps);
-    a-=s; b-=s; return 2*s;
-  }
-  __device__
-  void thermalize(Real &src, Real &a, Real &b) {
-    src *= Real(1)/Real(3);
-    a+=src; b+=src;
-  }
-  __device__
-  void thermalize(Real &src, Real &a, Real &b, Real &c, Real &d) {
-    src *= Real(1)/Real(5);
-    a+=src; b+=src; c+=src; d+=src;
-  }
-  __device__
-  void bounce (const Real solidity, Real &src, Real &dest) {
-    Real amt = src * solidity; 
-    dest += amt;
-    src -= amt;
-  }
-  __device__
   Real mix(const Real w, const Real n, const Real vx, const Real vy, const Real ux, const Real uy) {
     const Real inp = (ux*vx+uy*vy);
     return n*w*(Real(1) + Real(3) * inp + Real(4.5)*sq(inp) - Real(1.5)*(ux*ux+uy*uy));
   }
-
   
   __device__
   void collision (FluidPtr next) {
