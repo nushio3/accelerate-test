@@ -151,10 +151,11 @@ proceed c = c2
     ste12 (_,_,(_,x,_)) = x
     ste22 (_,_,(_,_,x)) = x
     [b00,b10,b20,b01,b11,b21,b02,b12,b22] = 
-      zipWith treat
+      zipWith3 treat
                 [ste22,ste12,ste02,ste21,ste11,ste01,ste20,ste10,ste00]
                 [a00,a10,a20,a01,a11,a21,a02,a12,a22]
-    treat ste src = (A.stencil ste A.Wrap solid) * src + A.stencil ste A.Wrap src
+                [a22,a12,a02,a21,a11,a01,a20,a10,a00]
+    treat ste src antisrc = (A.stencil ste A.Wrap solid) * antisrc + A.stencil ste A.Wrap src
     c2=((b00,b10,b20),(b01,b11,b21),(b02,b12,b22),solid)
 
 main :: IO ()
@@ -163,4 +164,5 @@ main = do
   BS.writeFile fn $ BS.concat $ 
       [header] ++ map (\f -> cEncode $ run $ f nextWorld) [dens,momx,momy,enrg]
   where
-    nextWorld = proceed . collision $ initWorld
+    nextWorld = update $ initWorld
+    update = foldl1 (.) $ replicate 10 (proceed . collision)
