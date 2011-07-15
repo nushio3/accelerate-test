@@ -20,7 +20,7 @@ import System.IO
 width, height, bmpWidth, bmpHeight, zoom, realSize :: Num a => a
 bmpWidth = 1024
 bmpHeight = 768
-zoom = 2
+zoom = 3
 width = bmpWidth * zoom
 height = bmpHeight * zoom
 
@@ -71,7 +71,7 @@ instance Eq AWR where
 instance Num AWR where
   a+b = A.use $ run $ A.zipWith (+) a b
   a-b = A.use $ run $ A.zipWith (-) a b
-  a*b = A.use $ run $ A.zipWith (*) a b
+  a*b = A.zipWith (*) a b
   abs = A.map abs
   signum = A.map signum
   fromInteger n =  createWorld (\_ _ -> fromInteger n)
