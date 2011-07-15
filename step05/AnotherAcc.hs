@@ -136,6 +136,27 @@ collision c = c2
     sf  = ((1-solid)*)
     c2 = ((b00,b10,b20),(b01,b11,b21),(b02,b12,b22),solid)
 
+proceed :: Cell AWR -> Cell AWR
+proceed c = c2
+  where
+    ((a00,a10,a20),(a01,a11,a21),(a02,a12,a22),solid)=c
+    ste00,ste10,ste20,ste01,ste11,ste21,ste02,ste12,ste22 :: A.Stencil3x3 Real -> Exp Real
+    ste00 ((x,_,_),_,_) = x
+    ste10 ((_,x,_),_,_) = x
+    ste20 ((_,_,x),_,_) = x
+    ste01 (_,(x,_,_),_) = x
+    ste11 (_,(_,x,_),_) = x
+    ste21 (_,(_,_,x),_) = x
+    ste02 (_,_,(x,_,_)) = x
+    ste12 (_,_,(_,x,_)) = x
+    ste22 (_,_,(_,_,x)) = x
+    [b00,b10,b20,b01,b11,b21,b02,b12,b22] = 
+      zipWith treat
+                [ste00,ste10,ste20,ste01,ste11,ste21,ste02,ste12,ste22]
+                [a00,a10,a20,a01,a11,a21,a02,a12,a22]
+    treat ste src = A.stencil ste A.Wrap src
+    c2=((b00,b10,b20),(b01,b11,b21),(b02,b12,b22),solid)
+
 main :: IO ()
 main = do
   (fn:_) <- getArgs
