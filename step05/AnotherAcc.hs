@@ -176,7 +176,7 @@ main = do
 loop :: Int -> (Cell AWR -> Cell AWR) -> Cell AWR -> IO ()
 loop n update w = do
   let fn = "bin/3/" ++ show (100000000+n) ++ ".bin"
-      nextWorld = update $ initWorld
+      nextWorld = update $ w
   hPutStrLn stderr fn
   BS.writeFile fn $ BS.concat $ 
       [header] ++ map (\f -> cEncode $ run $ f w) [dens,momx,momy,enrg]
