@@ -20,7 +20,7 @@ import System.IO
 width, height, bmpWidth, bmpHeight, zoom, realSize :: Num a => a
 bmpWidth = 1024
 bmpHeight = 768
-zoom = 3
+zoom = 2
 width = bmpWidth * zoom
 height = bmpHeight * zoom
 
@@ -175,7 +175,7 @@ main = do
 
 loop :: Int -> (Cell AWR -> Cell AWR) -> Cell AWR -> IO ()
 loop n update w = do
-  let fn = "bin/3/" ++ show (100000000+n) ++ ".bin"
+  let fn = "bin/" ++ show zoom ++ "/" ++ show (100000000+n) ++ ".bin"
       nextWorld = update $ w
   hPutStrLn stderr fn
   BS.writeFile fn $ BS.concat $ 
