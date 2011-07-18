@@ -38,6 +38,9 @@ int main (int argc, char **argv) {
     iss2 >> flowSpeed;
   }
 
+  cudaFuncSetCacheConfig(collision, cudaFuncCachePreferL1);
+  cudaFuncSetCacheConfig(proceed  , cudaFuncCachePreferL1);
+
   string dirn;
   {
     ostringstream oss; oss << "bin/" << zoom << "_" << flowSpeed;
@@ -52,8 +55,8 @@ int main (int argc, char **argv) {
   FluidPtr pFlu = flu.ptr();
   FluidPtr pFlu2 = flu2.ptr();
 
-  initialize<<<1024,448>>>(flowSpeed, pFlu);
-  initialize<<<1024,448>>>(flowSpeed, pFlu2);
+  initialize<<<1536,448>>>(flowSpeed, pFlu);
+  initialize<<<1536,448>>>(flowSpeed, pFlu2);
 
   double time_integrated = 0;
   
