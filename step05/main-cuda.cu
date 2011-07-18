@@ -59,8 +59,9 @@ int main (int argc, char **argv) {
   initialize<<<1536,448>>>(flowSpeed, pFlu2);
 
   double time_integrated = 0;
-  
-  for (int t = 0; t < zoom*100001; ++t) {
+
+  const int max_t = 501; //100001;
+  for (int t = 0; t < zoom*max_t; ++t) {
     if (t % (zoom*100) == 0) {
       ostringstream ossFn;
       ossFn << dirn << "/" << (100000000+t) << ".bin";
