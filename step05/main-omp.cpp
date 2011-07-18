@@ -32,7 +32,7 @@ int main (int argc, char **argv) {
     istringstream iss2(argv[2]);
     iss2 >> flowSpeed;
   }
-
+  cerr << argv[0] << endl;
   string dirn;
   {
     ostringstream oss; oss << "bin/" << zoom << "_" << flowSpeed;

@@ -7,7 +7,10 @@ ptx: main-cuda.cu Makefile
 	nvcc -O3 -arch=sm_20 --ptxas-options=-v  main-cuda.cu --ptx
 
 main-icpc.out : main-omp.cpp fluid.h Makefile
-	icpc -fast -openmp main-omp.cpp -o main-icpc.out 
+	icpc -fast -openmp -openmp-report2 main-omp.cpp -o main-icpc.out 
+
+main-pgi.out : main-omp.cpp fluid.h Makefile
+	pgCC -mp -fastsse main-omp.cpp -o main-pgi.out 
 
 main-g++.out : main-omp.cpp fluid.h  Makefile
 	g++ -O3 --openmp main-omp.cpp -o main-g++.out 
