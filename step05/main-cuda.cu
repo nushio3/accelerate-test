@@ -38,6 +38,8 @@ int main (int argc, char **argv) {
     iss2 >> flowSpeed;
   }
 
+  cerr << argv[0] << endl;
+  
   cudaFuncSetCacheConfig(collision, cudaFuncCachePreferL1);
   cudaFuncSetCacheConfig(proceed  , cudaFuncCachePreferL1);
 

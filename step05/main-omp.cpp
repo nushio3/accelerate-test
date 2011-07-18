@@ -52,7 +52,7 @@ int main (int argc, char **argv) {
   double time_integrated = 0;
   const int max_t = 501; //100001;
   for (int t = 0; t < zoom*max_t; ++t) {
-    if (t % (zoom*100) == 0) {
+    if (t % (zoom*500) == 0) {
       ostringstream ossFn;
       ossFn << dirn << "/" << (100000000+t) << ".bin";
       cerr << ossFn.str() << " : time spent so far " << time_integrated << endl;
