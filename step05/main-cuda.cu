@@ -55,8 +55,10 @@ int main (int argc, char **argv) {
   FluidPtr pFlu = flu.ptr();
   FluidPtr pFlu2 = flu2.ptr();
 
-  initialize<<<1536,448>>>(flowSpeed, pFlu);
-  initialize<<<1536,448>>>(flowSpeed, pFlu2);
+  const int blockDim = 1536, gridDim = 336;
+
+  initialize<<<blockDim,gridDim>>>(flowSpeed, pFlu);
+  initialize<<<blockDim,gridDim>>>(flowSpeed, pFlu2);
 
   double time_integrated = 0;
 
@@ -72,9 +74,9 @@ int main (int argc, char **argv) {
 
     double time_begin = get_time<double>();
     cudaThreadSynchronize();
-    collision<<<1024,448>>>(pFlu, pFlu2);
+    collision<<<blockDim,gridDim>>>(pFlu, pFlu2);
     cudaThreadSynchronize();
-    proceed<<<1024,448>>>(pFlu, pFlu2);
+    proceed<<<blockDim,gridDim>>>(pFlu, pFlu2);
     cudaThreadSynchronize();
     double time_end = get_time<double>();
     time_integrated += time_end - time_begin;
