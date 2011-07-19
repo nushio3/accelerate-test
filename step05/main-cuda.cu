@@ -57,16 +57,16 @@ int main (int argc, char **argv) {
   FluidPtr pFlu = flu.ptr();
   FluidPtr pFlu2 = flu2.ptr();
 
-  const int blockDim = 1536, gridDim = 336;
+  const int blockDim = 1024, gridDim = 448;
 
   initialize<<<blockDim,gridDim>>>(flowSpeed, pFlu);
   initialize<<<blockDim,gridDim>>>(flowSpeed, pFlu2);
 
   double time_integrated = 0;
 
-  const int max_t = 501; //100001;
+  const int max_t = 50001; //100001;
   for (int t = 0; t < zoom*max_t; ++t) {
-    if (t % (zoom*100) == 0) {
+    if (t % (zoom*50000) == 0) {
       ostringstream ossFn;
       ossFn << dirn << "/" << (100000000+t) << ".bin";
       cerr << ossFn.str() << " : time spent so far " << time_integrated << endl;

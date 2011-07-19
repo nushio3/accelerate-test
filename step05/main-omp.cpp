@@ -40,7 +40,7 @@ int main (int argc, char **argv) {
     system(("mkdir -p " + dirn).c_str());
   }
 
-  FluidMemory<vector<Real> > flu(1024*zoom,768*zoom);
+  FluidMemory<vector<Real> > flu(32*zoom,24*zoom);
   FluidMemory<vector<Real> >  flu2=flu;
 
   FluidPtr pFlu = flu.ptr();
@@ -50,9 +50,9 @@ int main (int argc, char **argv) {
   pFlu2.initialize(flowSpeed);
   
   double time_integrated = 0;
-  const int max_t = 501; //100001;
+  const int max_t = 50001; //100001;
   for (int t = 0; t < zoom*max_t; ++t) {
-    if (t % (zoom*500) == 0) {
+    if (t % (zoom*50000) == 0) {
       ostringstream ossFn;
       ossFn << dirn << "/" << (100000000+t) << ".bin";
       cerr << ossFn.str() << " : time spent so far " << time_integrated << endl;
