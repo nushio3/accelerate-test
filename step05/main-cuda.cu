@@ -50,8 +50,8 @@ int main (int argc, char **argv) {
     system(("mkdir -p " + dirn).c_str());
   }
 
-  FluidMemory<thrust::device_vector<Real> > flu(1024*zoom,768*zoom);
-  FluidMemory<thrust::host_vector<Real> > flu_host(1024*zoom,768*zoom);
+  FluidMemory<thrust::device_vector<Real> > flu(32*zoom,24*zoom);
+  FluidMemory<thrust::host_vector<Real> > flu_host(32*zoom,24*zoom);
   FluidMemory<thrust::device_vector<Real> >  flu2=flu;
 
   FluidPtr pFlu = flu.ptr();
