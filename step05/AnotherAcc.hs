@@ -20,7 +20,7 @@ import System.IO
 width, height, bmpWidth, bmpHeight, zoom, realSize :: Num a => a
 bmpWidth = 1024
 bmpHeight = 768
-zoom = 16
+zoom = 8
 width = bmpWidth * zoom
 height = bmpHeight * zoom
 
@@ -139,6 +139,7 @@ collision c = c2
     sf  = ((1-solid)*)
     c2 = ((b00,b10,b20),(b01,b11,b21),(b02,b12,b22),solid)
 
+
 proceed :: Cell AWR -> Cell AWR
 proceed c = c2
   where
@@ -159,7 +160,11 @@ proceed c = c2
                 [a00,a10,a20,a01,a11,a21,a02,a12,a22]
                 [a22,a12,a02,a21,a11,a01,a20,a10,a00]
     treat ste src antisrc = (A.stencil ste A.Wrap solid) * antisrc + A.stencil ste A.Wrap src
-    c2=((b00,b10,b20),(b01,b11,b21),(b02,b12,b22),solid)
+    c2=((fix b00,fix b10,fix b20),
+        (fix b01,fix b11,fix b21),
+        (fix b02,fix b12,fix b22),solid)
+
+    fix = A.use . run
 
 main :: IO ()
 main = do
@@ -175,7 +180,7 @@ main = do
 
 loop :: Int -> (Cell AWR -> Cell AWR) -> Cell AWR -> IO ()
 loop n update w = do
-  let fn = "bin/" ++ show zoom ++ "/" ++ show (100000000+n) ++ ".bin"
+  let fn = "bin/" ++ show zoom ++ "-fix/" ++ show (100000000+n) ++ ".bin"
       nextWorld = update $ w
   hPutStrLn stderr fn
   BS.writeFile fn $ BS.concat $ 
